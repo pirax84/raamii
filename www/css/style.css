@@ -449,3 +449,46 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .mis{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--ln)}.mis .lt{gap:4px}.mis.done{opacity:.6}
 .mis .bar{margin:4px 0}
 .fsw{width:42px;height:58px;border-radius:8px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)}
+/* ===== v1.4.0 : écran de jeu épuré, horizontal ===== */
+.tb .hd{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;position:relative;z-index:8}
+.tpill{justify-self:center;display:flex;align-items:center;gap:8px;padding:5px 14px 5px 6px;border-radius:20px;background:var(--panel);border:1.5px solid var(--ln);font-size:14px;font-weight:600;max-width:100%;min-width:0}
+.tpill .tw{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tpill .tms{font-size:16px;font-weight:800;color:var(--turq);font-variant-numeric:tabular-nums;min-width:42px;text-align:right}
+.tpill .tms.low{color:var(--coral);animation:pulse2 1s infinite}
+.tpill .rd{color:var(--mu);font-size:11px;font-weight:600;margin-left:2px}
+.tpill.me{border-color:var(--turq);box-shadow:0 0 14px #2FCDBE55}
+.tools{display:flex;gap:6px;position:relative}
+.tools .ib{width:40px;height:40px}
+.tools .helpop{top:48px;bottom:auto;right:0}
+/* défausse : centrée juste au-dessus de la main */
+.dsc2{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);z-index:5}
+.ctr{top:46%!important}
+/* barre du bas : mon badge discret à gauche, actions utiles à droite (au-dessus de l'éventail) */
+.tb .ac.v2{grid-area:hn;align-self:start;z-index:6;pointer-events:none;padding:0 4px;background:none}
+.tb .ac.v2 > *{pointer-events:auto}
+.mechip{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 4px;border-radius:16px;background:var(--panel);border:1.5px solid var(--ln);font-size:12.5px;font-weight:600}
+.mechip .av{width:28px;height:28px;font-size:12px;border-radius:9px}
+.mechip.turn{border-color:var(--turq)}
+.mechip .vt.live{width:28px;height:34px}
+.ring .seat.mine{display:none!important}
+.ring .seat.v2.rs{flex-direction:row;gap:6px;padding:4px 9px 4px 4px;min-width:0;max-width:150px}
+.ring .seat.v2.rs .nm{max-width:90px;font-size:12px}
+.ring .seat.v2.rs .av{width:30px;height:30px}
+/* micro / caméra en grand dans le menu ☰ */
+.avbig{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.avb{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--ln);background:var(--cd);min-height:60px;font-size:15px}
+.avb svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.avb.on{border-color:var(--turq);background:rgba(47,205,190,.15)}
+/* mode horizontal : main en demi-arc, laisser la place à la défausse */
+:root[data-lay="land"] .tb{grid-template-rows:auto minmax(0,1fr) auto}
+:root[data-lay="land"] .tb{grid-template-areas:"hd" "ce" "hn"}
+:root[data-lay="land"] .hn,:root[data-lay="land"] .hn.c8{padding-top:40px}
+@media (max-height:620px){:root[data-lay="land"] .hn,:root[data-lay="land"] .hn.c8{padding-top:34px;--fw:min(72px,calc((100vw - 80px)/9.6),calc((100vh - 250px)/1.25))}:root[data-lay="land"] .tpill{padding:3px 12px 3px 4px;font-size:13px}:root[data-lay="land"] .tools .ib,:root[data-lay="land"] .hd>.ib{width:36px;height:36px}}
+/* dispositions alternatives proposées (B, C) */
+:root[data-hud="b"] .tools{position:fixed;right:10px;bottom:calc(min(72px,calc((100vh - 250px)/1.25))*1.4 + 52px);z-index:9}
+:root[data-hud="b"] .tools .helpop{top:auto;bottom:48px}
+:root[data-hud="c"] .tools{display:none}
+:root[data-lay="land"] .ctr{left:40%!important;top:50%!important}
+:root[data-lay="land"] .mz{max-width:22%;max-height:22%}:root[data-lay="land"] .mz.mine{max-width:28%;max-height:24%}
+.tb .ac.v2{grid-area:ce!important;align-self:end!important;margin-bottom:4px}
+:root[data-hud="b"] .tools{bottom:auto;top:calc(100% - min(72px,calc((100vh - 250px)/1.25))*1.4 - 120px)}

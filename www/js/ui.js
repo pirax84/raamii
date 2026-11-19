@@ -22,6 +22,7 @@
     gift: '<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2"/><path d="M3 13h18M12 9v12M12 9c-2-4-6-4-6-1 0 1 1 1 6 1zM12 9c2-4 6-4 6-1 0 1-1 1-6 1z"/></svg>',
     spk: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"/></svg>',
     spkoff: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>',
+    burger: '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
     sort: '<svg viewBox="0 0 24 24"><path d="M7 4v16M4 7l3-3 3 3M17 20V4M14 17l3 3 3-3"/></svg>',
     bulb: '<svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/></svg>',
     trophy: '<svg viewBox="0 0 24 24"><path d="M6 4h12v4a6 6 0 01-12 0zM9 20h6M12 14v6"/></svg>',
@@ -47,7 +48,7 @@
   function applyOrientation() {
     lockOrient(); applyLayout(true);
   }
-  function wantLay() { var o = S.get('orient'); if (o === 'portrait') return 'port'; if (o === 'landscape') return 'land'; return G.matchMedia && G.matchMedia('(orientation: landscape)').matches ? 'land' : 'port'; }
+  function wantLay() { if (isNative()) return 'land'; var o = S.get('orient'); if (o === 'portrait') return 'port'; if (o === 'landscape') return 'land'; return G.matchMedia && G.matchMedia('(orientation: landscape)').matches ? 'land' : 'port'; }
   function applyLayout(animate) {
     var l = wantLay(); if (l === lay) return; var first = lay === null; lay = l; doc.documentElement.dataset.lay = l; helpCache.k = '';
     if (!first && animate && game && screen === 'table') { var tb = $('#table'); tb.classList.remove('relay'); void tb.offsetWidth; tb.classList.add('relay'); clearTimeout(relayT); relayT = setTimeout(function () { tb.classList.remove('relay'); }, 700); }
@@ -160,11 +161,11 @@
     return '<span class="st"><i class="' + (mic ? 'on' : '') + '" title="' + t(mic ? 'micOn' : 'micOff') + '" aria-label="' + t(mic ? 'micOn' : 'micOff') + '">' + (mic ? ICON.mic : ICON.micoff) + '</i><i class="' + (cam ? 'on' : '') + '" title="' + t(cam ? 'camOn' : 'camOff') + '" aria-label="' + t(cam ? 'camOn' : 'camOff') + '">' + (cam ? ICON.cam : ICON.camoff) + '</i></span>';
   }
   function fmtT(sec) { sec = Math.max(0, Math.ceil(sec)); return Math.floor(sec / 60) + ':' + ('0' + (sec % 60)).slice(-2); }
-  function seatHTML(p, pos, mine) {
+  function seatHTML(p, pos) {
     var turn = game.turn === p.id && !game.over, cnt = p.hand.length, remote = M.remote(p.id);
-    return '<div class="seat v2 rs' + (mine ? ' mine' : '') + (turn ? ' turn' : '') + (p.opened ? ' opened' : '') + '" data-act="seeMelds" data-v="' + p.id + '" style="--sx:' + pos.x + '%;--sy:' + pos.y + '%" aria-label="' + esc(p.name) + ', ' + cnt + ' ' + t('cards') + (p.opened ? ', ' + t('openedTip') : '') + '" title="' + esc(p.name) + ' · ' + p.total + ' ' + t('pts') + '">' +
-      '<div class="av" style="background:' + p.color + '">' + (turn && tmr.total ? '<i class="tmr"></i>' : '') + esc(p.name[0].toUpperCase()) + (mine ? '' : '<b class="cnt">' + cnt + '</b>') + '</div><div class="nm">' + esc(p.name) + '</div>' +
-      (turn && tmr.total ? '<b class="tms">' + fmtT((tmr.deadline - Date.now()) / 1000) + '</b>' : '') + (remote ? '<div class="vt live"><video autoplay playsinline data-remote="' + p.id + '"></video></div>' : '') + (mine ? '' : stIcons(false, !!remote)) + '</div>';
+    return '<div class="seat v2 rs' + (turn ? ' turn' : '') + (p.opened ? ' opened' : '') + '" data-act="seeMelds" data-v="' + p.id + '" style="--sx:' + pos.x + '%;--sy:' + pos.y + '%" aria-label="' + esc(p.name) + ', ' + cnt + ' ' + t('cards') + (p.opened ? ', ' + t('openedTip') : '') + '" title="' + esc(p.name) + ' · ' + p.total + ' ' + t('pts') + '">' +
+      '<div class="av" style="background:' + p.color + '">' + esc(p.name[0].toUpperCase()) + '<b class="cnt">' + cnt + '</b></div><div class="nm">' + esc(p.name) + '</div>' +
+      (remote ? '<div class="vt live"><video autoplay playsinline data-remote="' + p.id + '"></video></div>' : '') + '</div>';
   }
   function meldRow(m) {
     return '<div class="mrow' + (m.prov ? ' prov' : '') + '" data-meld="' + m.id + '">' + m.cards.map(function (c) { return R.CardView.html(c); }).join('') + '</div>';
@@ -195,8 +196,8 @@
     var ANG = { 1: [270], 2: [215, 325], 3: [180, 270, 360], 4: [180, 240, 300, 360], 5: [180, 226, 270, 314, 360] }[others.length] || [];
     function at(deg, rx, ry) { var r = deg * Math.PI / 180; return { x: (50 + rx * Math.cos(r)).toFixed(1), y: (50 + ry * Math.sin(r)).toFixed(1) }; }
     var seatR = lay === 'land' ? [45, 42] : [41, 43], meldR = lay === 'land' ? [30, 22] : [28, 27];
-    var seats = others.map(function (p, i) { return seatHTML(p, at(ANG[i], seatR[0], seatR[1]), false); }).join('') + seatHTML(me, at(90, 0, seatR[1] + 2), true);
-    var MZ = lay === 'land' ? { 180: [17, 62], 215: [30, 36], 226: [28, 38], 270: [50, 27], 314: [72, 38], 325: [70, 36], 360: [83, 62], mine: [50, 79] }
+    var seats = others.map(function (p, i) { var q = at(ANG[i], seatR[0], seatR[1]); if (lay === 'land') q.y = (+q.y + 4).toFixed(1); return seatHTML(p, q); }).join('');
+    var MZ = lay === 'land' ? { 180: [20, 64], 215: [24, 38], 226: [24, 40], 270: [64, 18], 314: [76, 40], 325: [76, 38], 360: [80, 64], mine: [72, 86] }
                             : { 180: [17, 67], 215: [24, 26], 226: [22, 27], 270: [50, 20], 314: [78, 27], 325: [76, 26], 360: [83, 67], mine: [50, 79] };
     var mzOf = function (q, deg, mine) {
       var ms = game.melds.filter(function (m) { return m.owner === q.id; }); if (!ms.length) return '';
@@ -209,7 +210,7 @@
     var drawz = '<div class="drawz">' +
       (game.reserve ? '<button class="pile rsv' + (canR ? ' can' : '') + '" data-act="reserve" aria-label="' + t('reserve') + ' : ' + esc(R.nameOf(game.reserve)) + '">' + R.CardView.html(game.reserve) + '</button>' : '') +
       '<button class="pile stk' + (canS ? ' can' : '') + '" data-act="stock" aria-label="' + t('draw') + ' (' + game.stock.length + ')"><div class="stack">' + R.CardView.back() + R.CardView.back() + '</div></button><b class="cntb" aria-hidden="true">' + game.stock.length + '</b></div>';
-    var piles = '<div class="piles">' + drawz + '<button class="pile dsc' + (canD ? ' can' : '') + '" data-act="discardPile" aria-label="' + t('discardPile') + '">' + (top ? R.CardView.html(top) : '<div class="card empty"></div>') + '</button></div>';
+    var piles = '<div class="piles">' + drawz + '</div>', dscH = '<div class="dsc2 piles"><button class="pile dsc' + (canD ? ' can' : '') + '" data-act="discardPile" aria-label="' + t('discardPile') + '">' + (top ? R.CardView.html(top) : '<div class="card empty"></div>') + '</button></div>';
     var cbs = (!covered && S.get('help')) ? combos(me.hand) : [], hlOf = {};
     cbs.forEach(function (cb) { cb.ids.forEach(function (id) { hlOf[id] = cb.color; }); });
     var n = me.hand.length, mid = (n - 1) / 2, stepDeg = Math.min(3.4, 46 / Math.max(n, 1)), k = mid > 0 ? 22 / (mid * mid) : 0;
@@ -229,24 +230,23 @@
       else if (me.opened) chip = '<span class="opc ok" title="' + t('selPts') + '">+' + plan.pts + ' ' + t('pts') + '</span>';
       else chip = '<span class="opc' + (plan.open.ok ? ' ok' : '') + '" title="' + t('opening') + '">' + plan.open.points + '/' + R.CONFIG.openPoints + (R.CONFIG.needPure ? ' · ' + (plan.open.pure ? '✓' : '✗') : '') + '</span>';
     } else if (my && game.phase === 'play' && !me.opened) { var oi = game.openingInfo(view); chip = '<span class="opc' + (oi.ok ? ' ok' : '') + '" title="' + t('opening') + '">' + oi.points + '/' + R.CONFIG.openPoints + (R.CONFIG.needPure ? ' · ' + (oi.pure ? '✓' : '✗') : '') + '</span>'; }
-    if (my && tmr.total) chip = '<span class="opc tmc"><b class="tms">' + fmtT((tmr.deadline - Date.now()) / 1000) + '</b></span>' + chip;
+
     if (!S.get('dragSeen') && !covered && game.round === 1) status = t('dragHint');
     var selCards = me.hand.filter(function (c) { return sel.indexOf(c.id) >= 0; });
     var canMeld = !!(plan && (me.opened || plan.open.ok)), canDis = my && game.phase === 'play' && sel.length === 1;
     var meTile = ms.cam && M.stream() ? '<div class="vt live"><video autoplay muted playsinline data-local="1"></video></div>' : '';
     var helpPop = helpOpen && !covered ? '<div class="pop helpop" role="dialog" aria-label="' + t('helpTitle') + '"><b>' + t('helpTitle') + '</b><div class="row" style="flex-wrap:wrap;gap:6px">' + (cbs.length ? cbs.map(function (cb, i) { return '<button class="hc" data-act="pickCombo" data-v="' + i + '" style="--hl:' + cb.color + '">' + esc(comboName(cb)) + '</button>'; }).join('') : '<span class="muted">' + t('noCombo') + '</span>') + '</div></div>' : '';
     var scorePop = scoresOpen ? '<div class="pop scorep" role="dialog" aria-label="' + t('scores') + '"><b>' + t('scores') + ' · ' + t('roundCol') + ' ' + game.round + '/' + game.rounds + '</b>' + game.P.slice().sort(function (a, b) { return a.total - b.total; }).map(function (q) { return '<div class="sr2"><i class="od" style="background:' + q.color + '">' + esc(q.name[0].toUpperCase()) + '</i><span>' + esc(q.name) + (q.opened ? ' <small class="muted">✓</small>' : '') + '</span><b>' + q.total + '</b></div>'; }).join('') + '</div>' : '';
-    var h = '<div class="stage" aria-hidden="true"><div class="felt"></div></div><div class="tb">' +
-      '<div class="hd"><button class="ib" data-act="pause" aria-label="' + t('tableSettings') + '">' + ICON.dots + '</button><div class="ttl">' + t('appName') + ' <small>' + game.round + '/' + game.rounds + '</small></div>' +
-      '<button class="ib' + (scoresOpen ? ' on' : '') + '" data-act="scores" aria-label="' + t('scores') + '" title="' + t('scores') + '">' + ICON.trophy + '</button>' +
-      '<button class="ib' + (ms.mic ? ' on' : ' off') + '" data-act="mic" aria-label="' + t(ms.mic ? 'micOn' : 'micOff') + '" title="' + t(ms.mic ? 'micOn' : 'micOff') + '" aria-pressed="' + ms.mic + '">' + (ms.mic ? ICON.mic : ICON.micoff) + '</button>' +
-      '<button class="ib' + (ms.cam ? ' on' : ' off') + '" data-act="cam" aria-label="' + t(ms.cam ? 'camOn' : 'camOff') + '" title="' + t(ms.cam ? 'camOn' : 'camOff') + '" aria-pressed="' + ms.cam + '">' + (ms.cam ? ICON.cam : ICON.camoff) + '</button></div>' +
-      '<div class="ce"><div class="felt2" aria-hidden="true"></div><div class="ring">' + seats + melds + '<div class="ctr">' + piles + '</div></div>' + loupe + scorePop + meldPanel() + '<button class="ib tgear" data-act="tableSettings" aria-label="' + t('tableSettings') + '" title="' + t('tableSettings') + '">' + ICON.gear + '</button></div>' +
-      '<div class="ac v2"><div class="me">' + meTile + stIcons(ms.mic, ms.cam) + '</div>' +
-      '<div class="status" role="status">' + chip + '<span class="stx">' + status + '</span></div>' +
-      '<div class="btns">' + helpPop + '<button class="ib" data-act="sortCycle" aria-label="' + t('sortTip') + '" title="' + t('sortTip') + '">' + ICON.sort + '</button>' +
+    var cp = game.cur(), who = covered ? '' : (my ? t('stYou') : esc(cp.name));
+    var tpill = '<div class="tpill' + (my ? ' me' : '') + '" role="status"><i class="od" style="background:' + cp.color + '">' + esc(cp.name[0].toUpperCase()) + '</i><span class="tw">' + who + '</span>' + (tmr.total ? '<b class="tms">' + fmtT((tmr.deadline - Date.now()) / 1000) + '</b>' : '') + '<small class="rd">' + game.round + '/' + game.rounds + '</small></div>';
+    var tools = '<div class="tools"><button class="ib" data-act="sortCycle" aria-label="' + t('sortTip') + '" title="' + t('sortTip') + '">' + ICON.sort + '</button>' +
       (S.get('help') ? '<button class="ib' + (helpOpen ? ' on' : '') + '" data-act="helpPop" aria-label="' + t('helpTip') + '" title="' + t('helpTip') + '">' + ICON.bulb + (cbs.length ? '<b class="nb">' + cbs.length + '</b>' : '') + '</button>' : '') +
-      (canMeld ? '<button class="btn pill" data-act="meld">' + t('meld') + '</button>' : '') + (canDis ? '<button class="btn pill" data-act="toDiscard">' + t('toDiscard') + '</button>' : '') + '</div></div>' +
+      '<button class="ib' + (scoresOpen ? ' on' : '') + '" data-act="scores" aria-label="' + t('scores') + '" title="' + t('scores') + '">' + ICON.trophy + '</button>' + helpPop + '</div>';
+    var h = '<div class="stage" aria-hidden="true"><div class="felt"></div></div><div class="tb">' +
+      '<div class="hd"><button class="ib" data-act="pause" aria-label="' + t('tableSettings') + '" title="' + t('tableSettings') + '">' + ICON.burger + '</button>' + tpill + tools + '</div>' +
+      '<div class="ce"><div class="felt2" aria-hidden="true"></div><div class="ring">' + seats + melds + '<div class="ctr">' + piles + '</div>' + dscH + '</div>' + scorePop + meldPanel() + '</div>' +
+      '<div class="ac v2"><div class="mechip' + (my ? ' turn' : '') + '"><div class="av" style="background:' + me.color + '">' + esc(me.name[0].toUpperCase()) + '</div><span>' + esc(me.name) + '</span>' + meTile + '</div>' + chip +
+      '<span class="sp"></span>' + (canMeld ? '<button class="btn pill" data-act="meld">' + t('meld') + '</button>' : '') + (canDis ? '<button class="btn pill" data-act="toDiscard">' + t('toDiscard') + '</button>' : '') + '</div>' +
       '<div class="hn' + (me.hand.length > 14 ? ' c8' : '') + '" id="hand">' + hand + '</div></div>';
     var el = $('#table'), old = {};
     if (doFlip) el.querySelectorAll('#hand .card[data-id]').forEach(function (c) { old[c.dataset.id] = c.getBoundingClientRect(); });
@@ -438,7 +438,7 @@
       case 'pause': $('#mpause').classList.add('on'); renderPause(); break;
       case 'resume': $('#mpause').classList.remove('on'); break;
       case 'quit': if (G.confirm ? true : true) act('menu'); return;
-      case 'mic': case 'cam': M.toggle(a).then(function () { render(); }).catch(function (e) { toast(e && e.name === 'NotAllowedError' ? t('mediaDenied') : t('mediaNone'), true); }); return;
+      case 'mic': case 'cam': M.toggle(a).then(function () { render(); if ($('#mpause').classList.contains('on')) renderPause(); }).catch(function (e) { toast(e && e.name === 'NotAllowedError' ? t('mediaDenied') : t('mediaNone'), true); }); return;
       case 'stock': case 'reserve': case 'discardPile':
         if (!game || game.over || covered) return;
         if (game.phase === 'draw' && game.turn === view) {
@@ -510,13 +510,15 @@
       '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('felt') + '</p><div class="row" style="flex-wrap:wrap">' + FELTS.filter(function (f) { return Sh.ownsFelt(f[0]); }).map(function (f) { var cur = (S.get('felt') || 'auto') === f[0]; return '<button class="chip sw2' + (cur ? ' on' : '') + '" data-act="felt" data-v="' + f[0] + '" aria-pressed="' + cur + '"><span class="swc" style="background:' + f[1] + '"></span>' + t(f[0] === 'auto' ? 'feltAuto' : 'f_' + f[0]) + '</button>'; }).join('') + '</div></div>' +
       '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('turnTime') + '</p>' + chips('turnTime', [[60, t('tmMin', { n: 1 })], [120, t('tmMin', { n: 2 })], [180, t('tmMin', { n: 3 })], [300, t('tmMin', { n: 5 })], [0, t('tmUnl')]], game && game.turnTime != null ? game.turnTime : S.get('turnTime')) + '<p class="tdesc">' + t('turnTimeSub') + '</p></div>' +
       '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('speed') + '</p>' + chips('speed', [[1.6, t('slow')], [1, t('normal')], [0.5, t('fast')]], S.get('speed')) + '</div>' +
-      '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('orientation') + '</p>' + chips('orient', [['auto', t('auto')], ['portrait', t('portrait')], ['landscape', t('landscape')]], S.get('orient')) + '<p class="tdesc">' + t('orientSub') + '</p></div>' +
+      (isNative() ? '' : '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('orientation') + '</p>' + chips('orient', [['auto', t('auto')], ['portrait', t('portrait')], ['landscape', t('landscape')]], S.get('orient')) + '<p class="tdesc">' + t('orientSub') + '</p></div>') +
       '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('language') + '</p>' + chips('lang', langs, S.get('lang') || 'auto') + '</div>' +
       '<p class="vers">' + t('appName') + ' · ' + t('version') + ' v' + R.VERSION + '</p>';
   }
   function renderPause() {
     var box = $('#mpause').querySelector('.box'), sc = box.scrollTop;
-    box.innerHTML = '<div class="row"><h2>' + t('tableSettings') + '</h2><span class="sp"></span><button class="ib" data-act="resume" aria-label="' + t('close') + '">' + ICON.back + '</button></div>' + settingsBody(true) +
+    var ms = M.state();
+    box.innerHTML = '<div class="row"><h2>' + t('tableSettings') + '</h2><span class="sp"></span><button class="ib" data-act="resume" aria-label="' + t('close') + '">' + ICON.back + '</button></div>' +
+      '<div class="avbig"><button class="avb' + (ms.mic ? ' on' : '') + '" data-act="mic" aria-pressed="' + ms.mic + '">' + (ms.mic ? ICON.mic : ICON.micoff) + '<b>' + t(ms.mic ? 'micOn' : 'micOff') + '</b></button><button class="avb' + (ms.cam ? ' on' : '') + '" data-act="cam" aria-pressed="' + ms.cam + '">' + (ms.cam ? ICON.cam : ICON.camoff) + '<b>' + t(ms.cam ? 'camOn' : 'camOff') + '</b></button></div>' + settingsBody(true) +
       '<button class="btn" data-act="resume">' + t('resume') + '</button><button class="btn ghost" data-act="rulesIn">' + t('rules') + '</button><button class="btn ghost" data-act="quit" style="color:var(--pink)">' + t('quit') + '</button>';
     box.scrollTop = sc;
   }

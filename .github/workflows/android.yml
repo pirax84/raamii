@@ -26,7 +26,8 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: android-actions/setup-android@v3
+      - name: Outils Android (déjà présents sur GitHub)
+        run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties && yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
       - name: Installer
         run: npm ci

@@ -2,7 +2,7 @@
 (function (G) {
   var R = (G.Rami = G.Rami || {});
   var ctx = null, master = null, musicBus = null, sfxBus = null, timer = null, current = null, noiseBuf = null;
-  var state = { music: true, sfx: true, volume: 0.5 };
+  var state = { music: true, sfx: true, volume: 0.5, sfxVol: 0.8 };
   var TRACKS = { calm: 'Salon calme', jazz: 'Soirée jazz', rain: 'Pluie douce', piano: 'Piano du soir', bossa: 'Bossa légère', night: 'Nuit étoilée' };
 
   function ensure() {
@@ -10,7 +10,7 @@
     var AC = G.AudioContext || G.webkitAudioContext; if (!AC) return false;
     ctx = new AC(); master = ctx.createGain(); master.gain.value = state.volume; master.connect(ctx.destination);
     musicBus = ctx.createGain(); musicBus.gain.value = 0.55; musicBus.connect(master);
-    sfxBus = ctx.createGain(); sfxBus.gain.value = 0.9; sfxBus.connect(master);
+    sfxBus = ctx.createGain(); sfxBus.gain.value = state.sfxVol * 1.1; sfxBus.connect(master);
     var len = ctx.sampleRate * 2; noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate); var d = noiseBuf.getChannelData(0);
     for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
     return true;
@@ -27,19 +27,64 @@
     s.connect(fl); fl.connect(g); g.connect(bus); s.start(t, Math.random()); s.stop(t + dur + 0.05);
   }
 
-  // ----- Bruitages -----
+  // ----- Bruitages de cartes réalistes (frottements de carton, claquements, petite pièce) — sans aucune note de musique -----
+  var room = null, sfxOut = null;
+  function out() {
+    if (sfxOut && sfxOut.context === ctx) return sfxOut;
+    sfxOut = ctx.createGain(); var lim = ctx.createDynamicsCompressor(); lim.threshold.value = -10; lim.knee.value = 6; lim.ratio.value = 8; lim.attack.value = 0.002; lim.release.value = 0.12; sfxOut.connect(lim); lim.connect(sfxBus);
+    var len = Math.floor(ctx.sampleRate * 0.32), ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (var ch = 0; ch < 2; ch++) { var d = ir.getChannelData(ch); for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2) * 0.5; }
+    room = ctx.createConvolver(); room.buffer = ir; var wet = ctx.createGain(); wet.gain.value = 0.14; room.connect(wet); wet.connect(sfxBus); sfxOut.connect(room);
+    return sfxOut;
+  }
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+  // frottement / claquement de carton
+  function paper(t, o) {
+    var src = ctx.createBufferSource(); src.buffer = noiseBuf;
+    var bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = o.q || 0.8; bp.frequency.setValueAtTime(o.f, t); if (o.f2) bp.frequency.exponentialRampToValueAtTime(o.f2, t + o.dur);
+    var hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 450;
+    var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(o.v * 3.2, t + (o.a || 0.004)); g.gain.exponentialRampToValueAtTime(0.0001, t + o.dur);
+    var node = g;
+    if (ctx.createStereoPanner) { var pn = ctx.createStereoPanner(); pn.pan.value = o.pan || 0; g.connect(pn); node = pn; }
+    src.connect(bp); bp.connect(hp); hp.connect(g); node.connect(out());
+    src.start(t, Math.random() * 1.5); src.stop(t + o.dur + 0.05);
+  }
+  // petit choc sourd de la carte sur le tapis
+  function thump(t, v) {
+    var src = ctx.createBufferSource(); src.buffer = noiseBuf; var lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 260; lp.Q.value = 0.6;
+    var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v * 2.4, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+    src.connect(lp); lp.connect(g); g.connect(out()); src.start(t, Math.random()); src.stop(t + 0.1);
+  }
   var SFX = {
-    shuffle: function (t) { for (var i = 0; i < 14; i++) noise(sfxBus, t + i * 0.045, 0.06, 0.25, 2500 + Math.random() * 2500, 0.8); },
-    deal: function (t) { noise(sfxBus, t, 0.07, 0.35, 3200, 1.2); tone(sfxBus, 220, t, 0.05, 'triangle', 0.05); },
-    flick: function (t) { noise(sfxBus, t, 0.06, 0.4, 4200, 1.4); },
-    select: function (t) { tone(sfxBus, f(79), t, 0.08, 'sine', 0.12); },
-    place: function (t) { noise(sfxBus, t, 0.09, 0.4, 1800, 0.9); tone(sfxBus, f(64), t, 0.18, 'triangle', 0.16); tone(sfxBus, f(71), t + 0.07, 0.22, 'sine', 0.12); },
-    open: function (t) { [60, 64, 67, 72].forEach(function (n, i) { tone(sfxBus, f(n + 12), t + i * 0.08, 0.5, 'sine', 0.14); }); },
-    error: function (t) { tone(sfxBus, f(48), t, 0.18, 'sawtooth', 0.08); tone(sfxBus, f(45), t + 0.1, 0.22, 'sawtooth', 0.08); },
-    win: function (t) { [67, 72, 76, 79, 84].forEach(function (n, i) { tone(sfxBus, f(n), t + i * 0.1, 0.6, 'triangle', 0.15); }); },
-    turn: function (t) { tone(sfxBus, f(76), t, 0.15, 'sine', 0.1); }
+    select: function (t) { paper(t, { f: 5200, q: 1.3, dur: 0.03, v: 0.09, a: 0.002 }); },
+    draw: function (t) { paper(t, { f: 2400, f2: 4200, dur: 0.17, v: 0.2, a: 0.035, q: 0.7, pan: rnd(-0.1, 0.1) }); paper(t + 0.15, { f: 5200, dur: 0.03, v: 0.13, a: 0.002 }); },
+    flick: function (t) { paper(t, { f: 2800, f2: 4000, dur: 0.11, v: 0.13, a: 0.02, pan: rnd(-0.3, 0.3) }); },
+    slide: function (t) { paper(t, { f: 1700, f2: 3200, dur: 0.24, v: 0.18, a: 0.06, q: 0.6 }); },
+    place: function (t, v) { v = v || 1; paper(t, { f: 3200, f2: 2200, dur: 0.07, v: 0.14 * v, a: 0.012 }); thump(t + 0.05, 0.3 * v); paper(t + 0.05, { f: 4300, dur: 0.028, v: 0.18 * v, a: 0.001 }); },
+    meld: function (t) { for (var i = 0; i < 3; i++) SFX.place(t + i * 0.09 + rnd(0, 0.02), 0.85); },
+    discard: function (t) { SFX.slide(t); SFX.place(t + 0.18); },
+    deal: function (t) { for (var i = 0; i < 12; i++) { var p = rnd(-0.35, 0.35); paper(t + i * 0.075 + rnd(0, 0.01), { f: rnd(2600, 4200), f2: 2000, dur: 0.06, v: rnd(0.12, 0.17), a: 0.004, pan: p }); thump(t + i * 0.075 + 0.04, 0.07); } },
+    shuffle: function (t) {
+      var n = 46; for (var i = 0; i < n; i++) { var x = Math.pow(i / n, 1.15); paper(t + 0.9 * x, { f: rnd(4200, 6800), q: 2, dur: 0.018, v: rnd(0.07, 0.12), a: 0.001, pan: (i % 2 ? -1 : 1) * (0.35 - 0.3 * x) }); }
+      paper(t + 0.95, { f: 1500, f2: 3600, dur: 0.36, v: 0.15, a: 0.09, q: 0.5 }); thump(t + 1.32, 0.24); paper(t + 1.32, { f: 4500, dur: 0.03, v: 0.12, a: 0.001 });
+    },
+    error: function (t) { thump(t, 0.26); thump(t + 0.13, 0.2); },
+    open: function (t) { SFX.meld(t); [72, 76, 79, 84].forEach(function (n, i) { tone(sfxBus, f(n), t + 0.32 + i * 0.08, 0.5, 'sine', 0.06); }); },
+    win: function (t) { [67, 72, 76, 79, 84].forEach(function (n, i) { tone(sfxBus, f(n), t + i * 0.1, 0.6, 'triangle', 0.12); }); },
+    turn: function (t) { tone(sfxBus, f(76), t, 0.15, 'sine', 0.07); }
   };
+  var SFX_TEST = ['draw', 'slide', 'place', 'meld', 'discard', 'deal', 'shuffle'];
   function sfx(name) { if (!state.sfx || !ensure() || !SFX[name]) return; SFX[name](ctx.currentTime + 0.01); }
+  // rend une suite de bruitages hors ligne (pour écouter un aperçu sans jouer)
+  function renderDemo(names, gap) {
+    var OAC = G.OfflineAudioContext || G.webkitOfflineAudioContext; if (!OAC) return Promise.reject(new Error('none'));
+    var keep = { ctx: ctx, sfxBus: sfxBus, noiseBuf: noiseBuf, sfxOut: sfxOut, room: room }, total = names.length * (gap || 1.6) + 0.5;
+    ctx = new OAC(2, Math.ceil(44100 * total), 44100); sfxBus = ctx.createGain(); sfxBus.gain.value = 0.9; sfxBus.connect(ctx.destination); sfxOut = null;
+    var len = ctx.sampleRate * 2; noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate); var d = noiseBuf.getChannelData(0); for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    names.forEach(function (n, i) { SFX[n](0.2 + i * (gap || 1.6)); });
+    var off = ctx; ctx = keep.ctx; sfxBus = keep.sfxBus; noiseBuf = keep.noiseBuf; sfxOut = keep.sfxOut; room = keep.room;
+    return off.startRendering();
+  }
 
   // ----- Musiques génératives (un seul morceau à la fois) -----
   var CH = [[57, 60, 64, 67], [53, 57, 60, 64], [48, 55, 60, 64], [55, 59, 62, 65]]; // Am7 Fmaj7 Cmaj7 G6
@@ -89,7 +134,8 @@
   }
   R.Audio = {
     TRACKS: TRACKS, sfx: sfx,
-    config: function (o) { Object.assign(state, o); if (master) master.gain.value = state.volume; if (!state.music) stop(); },
+    config: function (o) { Object.assign(state, o); if (master) master.gain.value = state.volume; if (sfxBus && sfxBus.context === ctx) sfxBus.gain.value = state.sfxVol * 1.1; if (!state.music) stop(); },
+    SFX_TEST: SFX_TEST, renderDemo: renderDemo,
     unlock: ensure, play: start, stop: stop, current: function () { return current; },
     toggle: function (name) { if (current === name) { stop(); return false; } start(name); return true; }
   };

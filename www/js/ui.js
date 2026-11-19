@@ -57,7 +57,7 @@
   function exitFs() { try { (doc.exitFullscreen || doc.webkitExitFullscreen).call(doc); } catch (e) {} }
   function lockOrient() { var o = S.get('orient'); try { if (!screen_orientation()) return; if (o === 'auto') G.screen.orientation.unlock(); else G.screen.orientation.lock(o === 'portrait' ? 'portrait' : 'landscape').catch(function () {}); } catch (e) {} }
   function screen_orientation() { return G.screen && G.screen.orientation && G.screen.orientation.lock; }
-  function audioCfg() { A.config({ music: S.get('music'), sfx: S.get('sfx'), volume: S.get('volume') }); }
+  function audioCfg() { A.config({ music: S.get('music'), sfx: S.get('sfx'), volume: S.get('volume'), sfxVol: S.get('sfxVol') != null ? S.get('sfxVol') : 0.8 }); }
   function toast(msg, bad) { var el = $('#toast'); el.textContent = msg; el.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(function () { el.style.display = 'none'; }, 2600); if (bad) A.sfx('error'); }
 
   // ---------- Menu ----------
@@ -104,7 +104,7 @@
     hasHumans = players.filter(function (p) { return p.human; }).length; R.setRules(S.get('rules') || 'maison');
     if (S.get('full')) enterFs();
     game = new R.Game({ players: players, rounds: setup.rounds }); game.turnTime = S.get('turnTime') != null ? S.get('turnTime') : 120;
-    game.on(onEvent); view = 0; sel = []; show('table'); A.sfx('shuffle'); startMusic();
+    game.on(onEvent); view = 0; sel = []; show('table'); startMusic();
     dealing = true; game.startRound(); setTimeout(function () { dealing = false; }, 900);
   }
   function startMusic() { if (S.get('music')) A.play(S.get('track')); }
@@ -115,14 +115,14 @@
       sel = []; var p = game.cur();
       if (p.human) { view = (hasHumans > 1) ? p.id : 0; covered = hasHumans > 1; if (hasHumans === 1) A.sfx('turn'); }
     }
-    if (type === 'draw') { A.sfx('flick'); var dp = game.P[d.pid]; if (dp.human && d.pid === view && !covered) { newId = d.card.id; showDrawn(d.card); } }
-    if (type === 'discard') A.sfx('flick');
-    if (type === 'meld') A.sfx('place');
+    if (type === 'draw') { A.sfx(game.P[d.pid].human ? 'draw' : 'flick'); var dp = game.P[d.pid]; if (dp.human && d.pid === view && !covered) { newId = d.card.id; showDrawn(d.card); } }
+    if (type === 'discard') A.sfx('discard');
+    if (type === 'meld') A.sfx('meld');
     if (type === 'attach') A.sfx('place');
     if (type === 'open') { A.sfx('open'); toast(t('opened', { name: game.P[d.pid].name })); }
     if (type === 'rollback') toast(d.reason, true);
     if (type === 'reshuffle') { A.sfx('shuffle'); toast(t('reshuffle')); }
-    if (type === 'roundStart') { dealing = true; A.sfx('shuffle'); setTimeout(function () { dealing = false; }, 900); }
+    if (type === 'roundStart') { dealing = true; A.sfx('shuffle'); setTimeout(function () { A.sfx('deal'); }, 1450); setTimeout(function () { dealing = false; }, 900); }
     if (type === 'roundEnd') { setTimeout(function () { roundEnd(d); }, 900); A.sfx(game.P[d.winner].human ? 'win' : 'flick'); }
     if (type === 'gameEnd') { S.recordGame(d.ranking); var won = Sh.REWARD.game + (d.ranking[0].human ? Sh.REWARD.win : 0); Sh.earn(won); d.coins = won; gameEnd(d);
       if (C2 && C2.user()) { var hu = d.ranking.filter(function (r) { return r.human; })[0]; C2.recordGame({ rules: R.CONFIG.id, rounds: game.rounds, players: game.P.length, ranking: d.ranking, total: hu ? hu.total : 0, won: !!d.ranking[0].human }); } }
@@ -481,6 +481,8 @@
       Object.keys(tr).map(function (k) { return '<div class="li"><button class="round" data-act="track" data-v="' + k + '" aria-label="' + t('tr_' + k) + '">' + (cur === k ? ICON.pause : ICON.play) + '</button><b>' + t('tr_' + k) + '</b></div>'; }).join('') +
       '<div class="li"><span>' + t('volume') + '</span><input type="range" id="vol" min="0" max="100" value="' + Math.round(S.get('volume') * 100) + '" aria-label="' + t('volume') + '"></div>' +
       '<div class="li"><span>' + t('sfx') + '</span><span class="sp"></span>' + sw('sfxSw', S.get('sfx'), t('sfx')) + '</div>' +
+      '<div class="li"><span>' + t('sfxVol') + '</span><input type="range" id="sfxvol" min="0" max="100" value="' + Math.round((S.get('sfxVol') != null ? S.get('sfxVol') : 0.8) * 100) + '" aria-label="' + t('sfxVol') + '"></div>' +
+      '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('sfxTest') + '</p><div class="sfxg">' + A.SFX_TEST.map(function (k) { return '<button class="sfxb" data-act="sfxTry" data-v="' + k + '"><span class="round" aria-hidden="true">' + ICON.play + '</span>' + t('s_' + k) + '</button>'; }).join('') + '</div></div>' +
       '<div class="li"><div class="lt"><b>' + t('help') + '</b><p class="tdesc">' + t('helpSub') + '</p></div>' + sw('helpSw', S.get('help'), t('help')) + '</div>' +
       '<div class="li"><div class="lt"><b>' + t('chat') + '</b><p class="tdesc">' + t('chatSub') + '</p></div>' + sw('chatSw', S.get('chat'), t('chat')) + '</div>' +
       '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('rulesSet') + '</p>' + rulesPicker() + (game ? '<p class="tdesc">' + t('rulesNext') + '</p>' : '') + '</div>' +
@@ -551,6 +553,7 @@
       case 'chatSw': S.set('chat', !S.get('chat')); if (!S.get('chat')) chatOpen = false; break;
       case 'track': A.unlock(); A.config({ music: true }); var playing = A.toggle(el.dataset.v); S.set('track', el.dataset.v); S.set('music', playing ? true : S.get('music')); break;
       case 'speed': S.set('speed', +el.dataset.v); break;
+      case 'sfxTry': A.unlock(); if (!S.get('sfx')) { S.set('sfx', true); audioCfg(); } A.sfx(el.dataset.v); return true;
       case 'turnTime': if (game && !game.ended) { startVote(+el.dataset.v); return true; } S.set('turnTime', +el.dataset.v); break;
       case 'rulesPick': S.set('rules', el.dataset.v); rulesView = null; if (screen === 'setup') { readNames(); renderSetup(); } A.sfx('flick'); break;
       case 'rulesViewPick': rulesView = el.dataset.v; break;
@@ -646,7 +649,7 @@
       if (accAct(a)) return;
       act(a, b); renderChat();
     });
-    doc.addEventListener('input', function (e) { if (e.target.id === 'accEmail') accDraft.email = e.target.value; if (e.target.id === 'accPw') accDraft.pw = e.target.value; if (e.target.id === 'accPseudo') accDraft.pseudo = e.target.value; if (e.target.id === 'vol') { S.set('volume', e.target.value / 100); audioCfg(); } });
+    doc.addEventListener('input', function (e) { if (e.target.id === 'accEmail') accDraft.email = e.target.value; if (e.target.id === 'accPw') accDraft.pw = e.target.value; if (e.target.id === 'accPseudo') accDraft.pseudo = e.target.value; if (e.target.id === 'sfxvol') { S.set('sfxVol', e.target.value / 100); audioCfg(); clearTimeout(e.target._t); e.target._t = setTimeout(function () { A.sfx('place'); }, 180); } if (e.target.id === 'vol') { S.set('volume', e.target.value / 100); audioCfg(); } });
     M.onChange(function () { if (game && screen === 'table') render(); });
     if (C2) C2.onChange(function () { var fo = doc.activeElement && /^acc/.test(doc.activeElement.id || ''); if (!fo && (screen === 'settings' || screen === 'rank')) { if (screen === 'settings') renderSettings(); else renderRank(); } applyTheme(); });
     G.addEventListener('resize', function () { var before = lay; applyLayout(true); if (before === lay && game && screen === 'table') render(); renderChat(); });

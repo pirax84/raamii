@@ -9,7 +9,7 @@
   var ICON = {
     mic: '<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>',
     micoff: '<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3M3 3l18 18"/></svg>',
-    ace: '<svg viewBox="0 0 64 64"><g transform="rotate(-20 32 54)"><rect x="18" y="10" width="28" height="40" rx="5" fill="#2FCDBE"/><rect x="21.5" y="13.5" width="21" height="33" rx="3" fill="none" stroke="#B8F1EA" stroke-width="1.6"/></g><g transform="rotate(18 32 54)"><rect x="18" y="10" width="28" height="40" rx="5" fill="#6F57E6"/><rect x="21.5" y="13.5" width="21" height="33" rx="3" fill="none" stroke="#C9BBFF" stroke-width="1.6"/></g><g><rect x="18" y="12" width="28" height="40" rx="5" fill="#FFFFFF" stroke="#14214A" stroke-width="2"/><text x="21.3" y="21" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="8" fill="#14214A">A</text><text x="42.7" y="49.5" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="8" fill="#14214A" text-anchor="middle" transform="rotate(180 40.3 46.8)">A</text><path transform="translate(22 22) scale(.83)" d="M12 2C6 8 3 11 3 14a4.5 4.5 0 008 3c0 3-1 4-3 5h8c-2-1-3-2-3-5a4.5 4.5 0 008-3c0-3-3-6-9-12z" fill="#14214A"/></g></svg>',
+    ace: '<svg viewBox="0 0 64 64"><g transform="rotate(-16 32 58)"><rect x="19" y="12" width="26" height="37" rx="4.5" fill="#FFFFFF" stroke="#14214A" stroke-width="1.6"/><text x="22" y="21.5" font-family="Fredoka,Arial,sans-serif" font-weight="700" font-size="8" fill="#D9467F">7</text></g><g transform="rotate(16 32 58)"><rect x="19" y="12" width="26" height="37" rx="4.5" fill="#FFFFFF" stroke="#14214A" stroke-width="1.6"/><text x="22" y="21.5" font-family="Fredoka,Arial,sans-serif" font-weight="700" font-size="8" fill="#D9467F">9</text></g><g><rect x="19" y="10" width="26" height="37" rx="4.5" fill="#FFFFFF" stroke="#14214A" stroke-width="1.6"/><text x="22" y="19.5" font-family="Fredoka,Arial,sans-serif" font-weight="700" font-size="8" fill="#D9467F">8</text><path d="M32 40c-6-4.6-8.6-7.6-8.6-10.6a4.3 4.3 0 018.6-1 4.3 4.3 0 018.6 1c0 3-2.6 6-8.6 10.6z" fill="#D9467F"/></g></svg>',
     chat: '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>',
     bag: '<svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 016 0"/></svg>',
     cam: '<svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="M16 11l5-3v8l-5-3"/></svg>',
@@ -17,6 +17,8 @@
     back: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
     dots: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>',
     play: '<svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>', pause: '<svg viewBox="0 0 24 24"><rect x="7" y="5" width="4" height="14"/><rect x="13" y="5" width="4" height="14"/></svg>',
+    zoom: '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/></svg>',
+    zoomout: '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5"/></svg>',
     robot: '<svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="12" rx="3"/><circle cx="9" cy="13" r="1"/><circle cx="15" cy="13" r="1"/><path d="M12 3v4"/></svg>',
     people: '<svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><circle cx="17" cy="10" r="2.5"/><path d="M3 20a6 6 0 0112 0M15 20a5 5 0 016 0"/></svg>',
     gift: '<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2"/><path d="M3 13h18M12 9v12M12 9c-2-4-6-4-6-1 0 1 1 1 6 1zM12 9c2-4 6-4 6-1 0 1-1 1-6 1z"/></svg>',
@@ -29,7 +31,7 @@
     book: '<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/></svg>',
     gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>'
   };
-  var Pg = R.Progress, unlocked = false, meldView = null, tmr = { deadline: 0, total: 0, last: 0, pid: -1, warned: false }, vote = null, accDraft = { email: '', pw: '', pseudo: '' }, C2 = R.Cloud, drag = null, dragId = null, lastDragEnd = 0, doFlip = false, helpOpen = false, scoresOpen = false, sortMode = 0, lay = null, relayT = null, installEvt = null, rulesView = null, newId = null, helpCache = { k: '', v: [] }, drawnT = null, chatMsgs = [], chatOpen = false, chatUnread = false;
+  var Pg = R.Progress, unlocked = false, meldView = null, zoomAt = {}, zoomAnim = false, tmr = { deadline: 0, total: 0, last: 0, pid: -1, warned: false }, vote = null, accDraft = { email: '', pw: '', pseudo: '' }, C2 = R.Cloud, drag = null, dragId = null, lastDragEnd = 0, doFlip = false, helpOpen = false, scoresOpen = false, sortMode = 0, lay = null, relayT = null, installEvt = null, rulesView = null, newId = null, helpCache = { k: '', v: [] }, drawnT = null, chatMsgs = [], chatOpen = false, chatUnread = false;
   var game = null, mode = 'solo', view = 0, sel = [], covered = false, aiTimer = null, toastT = null, dealing = false, screen = 'menu', hasHumans = 1;
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -74,11 +76,21 @@
   function mbtn(act, c, ic, title, sub) { return '<button class="mbtn" data-act="' + act + '"><span class="ic" style="background:' + c + '">' + ICON[ic] + '</span><span><b>' + title + '</b><small>' + sub + '</small></span></button>'; }
   function renderMenu() {
     var li = Pg.levelInfo(), pend = Pg.pending(), hm = S.get('homeMusic') !== false;
-    $('#menu').innerHTML = '<div class="menu"><div class="row">' + logo() + '<span class="sp"></span><button class="ib" data-act="homeMute" aria-label="' + t(hm ? 'soundOn' : 'soundOff') + '" title="' + t(hm ? 'soundOn' : 'soundOff') + '">' + (hm ? ICON.spk : ICON.spkoff) + '</button><button class="ib" data-act="themeToggle" aria-label="' + t('theme') + '">' + ICON.gear + '</button></div>' +
-      '<div class="row lvl"><button class="lvc" data-act="daily"><b>' + t('levelN', { n: li.level }) + '</b><span class="bar"><i style="width:' + Math.round(100 * li.have / li.span) + '%"></i></span><small>' + t('xpTo', { a: li.have, b: li.span }) + '</small></button><span class="coinb"><span class="coin"></span>' + Sh.coins() + '</span></div>' +
-      '<div class="hero" aria-hidden="true">' + [['A', 'H', -12], ['K', 'S', 0], ['Q', 'D', 12]].map(function (c, i) { return '<div style="transform:rotate(' + c[2] + 'deg);margin:0 -8px;--cw:62px;z-index:' + (i === 1 ? 2 : 1) + '">' + R.CardView.html({ id: 'm' + i, r: c[0] === 'A' ? 1 : c[0] === 'K' ? 13 : 12, s: c[1] }) + '</div>'; }).join('') + '</div>' +
-      mbtn('solo', '#2FCDBE', 'robot', t('solo'), t('soloSub')) + mbtn('friends', '#E5679C', 'people', t('friends'), t('friendsSub')) +
-      mbtn('daily', '#2FCDBE', 'gift', t('daily') + (pend ? ' <i class="pdot">' + pend + '</i>' : ''), t('dailySub')) + mbtn('rank', '#FF8A6B', 'trophy', t('ranking'), '') + mbtn('shop', '#C9BBFF', 'bag', t('shop'), t('shopSub')) + mbtn('rules', '#9B87F5', 'book', t('rules'), t('menuRulesSub')) + mbtn('settings', '#4F7BFF', 'gear', t('settings'), t('theme') + ', ' + t('music') + ', ' + t('language')) + '<p class="vers">' + t('appName') + ' · v' + R.VERSION + '</p></div>';
+    function cv(r, su, j) { return R.CardView.html(j ? { id: 'hj' + r, r: 0, s: 'J', joker: true } : { id: 'h' + r + su, r: r, s: su }); }
+    var fan = [[-30, 7, 'H'], [-15, 8, 'H'], [0, 9, 'H'], [15, 0, 'J', 1], [30, 1, 'S']].map(function (c, i) {
+      return '<div class="hf" style="--a:' + c[0] + 'deg;--d:' + (i * 70) + 'ms">' + cv(c[1], c[2], c[3]) + '</div>'; }).join('');
+    var spk = [[8, 18], [86, 10], [92, 62], [4, 70], [50, 2]].map(function (q, i) { return '<i class="spk" style="left:' + q[0] + '%;top:' + q[1] + '%;--d:' + (i * .7) + 's"></i>'; }).join('');
+    var T = [['friends', t('friends'), t('friendsSub'), 1, 'H'], ['daily', t('daily') + (pend ? ' <i class="pdot">' + pend + '</i>' : ''), t('dailySub'), 0, 'J', 1], ['rank', t('ranking'), t('rankSub'), 13, 'D'],
+      ['shop', t('shop'), t('shopSub'), 12, 'S'], ['rules', t('rules'), t('menuRulesSub'), 7, 'D'], ['settings', t('settings'), t('setSub'), 6, 'C']];
+    var tiles = T.map(function (x) { return '<button class="htile" data-act="' + x[0] + '"><span class="wm" aria-hidden="true">' + cv(x[3], x[4], x[5]) + '</span><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('');
+    $('#menu').innerHTML = '<div class="home">' +
+      '<div class="hbrand"><span class="hlogo">' + ICON.ace + '</span><b class="hname">' + t('appName') + '</b></div>' +
+      '<div class="htop"><button class="hchip" data-act="daily"><b>' + t('levelN', { n: li.level }) + '</b><span class="bar"><i style="width:' + Math.round(100 * li.have / li.span) + '%"></i></span></button><span class="hchip"><span class="coin"></span>' + Sh.coins() + '</span>' +
+      '<button class="ib" data-act="homeMute" aria-label="' + t(hm ? 'soundOn' : 'soundOff') + '" title="' + t(hm ? 'soundOn' : 'soundOff') + '">' + (hm ? ICON.spk : ICON.spkoff) + '</button></div>' +
+      '<div class="hfan" aria-hidden="true">' + spk + '<div class="hfc">' + fan + '</div></div>' +
+      '<button class="hsolo" data-act="solo">' + ICON.robot + '<span>' + t('playSolo') + '<small>' + t('soloSub') + '</small></span></button>' +
+      '<div class="htiles">' + tiles + '</div>' +
+      '<p class="vers hv">' + t('appName') + ' · v' + R.VERSION + '</p></div>';
   }
 
   // ---------- Préparation d'une partie ----------
@@ -200,9 +212,9 @@
     var MZ = lay === 'land' ? { 180: [20, 64], 215: [24, 38], 226: [24, 40], 270: [64, 18], 314: [76, 40], 325: [76, 38], 360: [80, 64], mine: [72, 86] }
                             : { 180: [17, 67], 215: [24, 26], 226: [22, 27], 270: [50, 20], 314: [78, 27], 325: [76, 26], 360: [83, 67], mine: [50, 79] };
     var mzOf = function (q, deg, mine) {
+      var xy = MZ[mine ? 'mine' : deg] || [50, 50], po = { x: xy[0], y: xy[1] }; zoomAt[q.id] = xy;
       var ms = game.melds.filter(function (m) { return m.owner === q.id; }); if (!ms.length) return '';
-      var xy = MZ[mine ? 'mine' : deg] || [50, 50], po = { x: xy[0], y: xy[1] };
-      return '<div class="mz' + (mine ? ' mine' : '') + '" data-act="seeMelds" data-v="' + q.id + '" style="--mx:' + po.x + '%;--my:' + po.y + '%;--oc:' + q.color + '" aria-label="' + esc(t('seeMelds', { name: q.name })) + '">' + ms.map(meldRow).join('') + '</div>';
+      return '<div class="mz' + (mine ? ' mine' : '') + (meldView === q.id ? ' zsrc' : '') + '" data-act="seeMelds" data-v="' + q.id + '" style="--mx:' + po.x + '%;--my:' + po.y + '%;--oc:' + q.color + '" aria-label="' + esc(t('seeMelds', { name: q.name }) + ' · ' + t('zoomIn')) + '">' + ms.map(meldRow).join('') + '<i class="mzl" aria-hidden="true">' + ICON.zoom + '</i></div>';
     };
     var melds = others.map(function (p, i) { return mzOf(p, ANG[i], false); }).join('') + mzOf(me, 90, true);
     var top = game.discard[game.discard.length - 1];
@@ -261,11 +273,16 @@
     $('#cover').classList.toggle('on', covered && !game.over);
     if (covered) $('#cover').innerHTML = '<div class="box" style="text-align:center"><h2>' + t('passTo') + '</h2><p style="font-size:28px;margin:4px 0"><b>' + esc(game.cur().name) + '</b></p><button class="btn" data-act="uncover">' + t('iAm') + '</button></div>';
   }
+  // Zoom sur le jeu posé d'un joueur : 1er appui = en grand, 2e appui = taille normale
   function meldPanel() {
     if (meldView === null || !game.P[meldView]) return '';
-    var q = game.P[meldView], ms = game.melds.filter(function (m) { return m.owner === q.id; });
-    return '<div class="pop meldp" role="dialog" aria-label="' + esc(t('seeMelds', { name: q.name })) + '"><div class="row"><i class="od" style="background:' + q.color + '">' + esc(q.name[0].toUpperCase()) + '</i><b style="flex:1">' + esc(t('seeMelds', { name: q.name })) + '</b><button class="ib" data-act="closeMelds" aria-label="' + t('close2') + '" style="width:34px;height:34px">' + ICON.back + '</button></div>' +
-      (ms.length ? '<div class="mpl">' + ms.map(meldRow).join('') + '</div>' : '<p class="tdesc" style="margin:0">' + t('noMelds') + '</p>') + '</div>';
+    var q = game.P[meldView], ms = game.melds.filter(function (m) { return m.owner === q.id; }), o = zoomAt[q.id] || [50, 50];
+    var h = '<div class="mzz-bg" data-act="closeMelds" aria-hidden="true"></div>' +
+      '<div class="mzz' + (zoomAnim ? ' anim' : '') + '" data-act="seeMelds" data-v="' + q.id + '" role="dialog" aria-label="' + esc(t('seeMelds', { name: q.name }) + ' · ' + t('zoomOut')) + '" style="--ox:' + o[0] + '%;--oy:' + o[1] + '%;--oc:' + q.color + '">' +
+      '<div class="mzh"><i class="od" style="background:' + q.color + '">' + esc(q.name[0].toUpperCase()) + '</i><b>' + esc(q.name) + '</b><span class="mzc">' + q.hand.length + ' ' + t('cards') + (ms.length ? ' · ' + t('nMelds', { n: ms.length }) : '') + '</span><span class="sp"></span><span class="mzo">' + ICON.zoomout + '</span></div>' +
+      (ms.length ? '<div class="mzb">' + ms.map(meldRow).join('') + '</div>' : '<p class="mze">' + t('noMelds') + '</p>') +
+      '<small class="mzt">' + t('zoomOut') + '</small></div>';
+    zoomAnim = false; return h;
   }
   // Pose de plusieurs combinaisons d'un coup : la sélection est découpée automatiquement
   function planMeld(ids) {
@@ -449,7 +466,7 @@
         break;
       case 'arrange': doFlip = true; arrangeHand(false); return;
       case 'sortCycle': doFlip = true; sortMode = (sortMode + 1) % 2; arrangeHand(sortMode === 0); return;
-      case 'seeMelds': meldView = meldView === +el.dataset.v ? null : +el.dataset.v; helpOpen = scoresOpen = false; break;
+      case 'seeMelds': meldView = meldView === +el.dataset.v ? null : +el.dataset.v; zoomAnim = meldView !== null; helpOpen = scoresOpen = false; A.sfx('flick'); break;
       case 'closeMelds': meldView = null; break;
       case 'voteYes': case 'voteNo': if (vote) { vote.res[+el.dataset.v] = a === 'voteYes'; renderVote(); } return;
       case 'voteClose': vote = null; $('#mvote').classList.remove('on'); break;
@@ -668,7 +685,7 @@
     if (G.matchMedia) { var mq = G.matchMedia('(orientation: landscape)'); var onMq = function () { applyLayout(true); }; if (mq.addEventListener) mq.addEventListener('change', onMq); else if (mq.addListener) mq.addListener(onMq); }
     doc.addEventListener('click', function (e) {
       if (Date.now() - lastDragEnd < 350) return;
-      if ((helpOpen || scoresOpen || meldView !== null) && !(e.target.closest && e.target.closest('.pop,[data-act=helpPop],[data-act=scores],[data-act=pickCombo],[data-act=seeMelds]'))) { helpOpen = scoresOpen = false; meldView = null; if (game && screen === 'table') render(); }
+      if ((helpOpen || scoresOpen || meldView !== null) && !(e.target.closest && e.target.closest('.pop,.mzz,.mzz-bg,[data-act=helpPop],[data-act=scores],[data-act=pickCombo],[data-act=seeMelds]'))) { helpOpen = scoresOpen = false; meldView = null; if (game && screen === 'table') render(); }
       var card = e.target.closest && e.target.closest('#hand .card[data-id]');
       if (card) { tapCard(+card.dataset.id); return; }
       var mr = e.target.closest && e.target.closest('.mrow[data-meld]');

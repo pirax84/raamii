@@ -1,0 +1,69 @@
+# Fabrique automatiquement le fichier Raamii.apk à chaque mise à jour du projet,
+# puis le publie dans « Releases » : https://github.com/pirax84/raamii/releases/latest
+name: APK Android Raamii
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Installer
+        run: npm ci
+
+      - name: Tester les règles et le moteur de jeu
+        run: npm test
+
+      - name: Préparer (Supabase + fichiers)
+        run: node scripts/vendor.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Copier l'appli dans le projet Android
+        run: npx cap sync android
+
+      - name: Fabriquer l'APK
+        working-directory: android
+        run: chmod +x gradlew && ./gradlew assembleRelease --no-daemon
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+
+      - name: Renommer
+        run: cp android/app/build/outputs/apk/release/app-release.apk Raamii.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Raamii-apk
+          path: Raamii.apk
+
+      - name: Publier dans Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.1.${{ github.run_number }}
+          name: Raamii 1.1.${{ github.run_number }}
+          body: |
+            Nouvelle version de Raamii pour Android.
+            Sur ton téléphone : télécharge **Raamii.apk** ci-dessous, ouvre-le, puis touche « Installer ».
+          files: Raamii.apk
+          make_latest: true

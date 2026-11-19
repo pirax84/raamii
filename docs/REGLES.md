@@ -1,0 +1,3 @@
+# Règles intégrées
+108 cartes (2×52 + 4 jokers) · jusqu'à 6 joueurs · 14 cartes · ouvrir avec 51 points minimum avec une tierce franche (suite d'une couleur, sans joker) · défausse interdite au 1er tour, permise dès le 2e · carte visible sous la pioche : seulement pour finir sec · fin classique : 100 pts aux joueurs non ouverts · fin sec : 200 pts · As = 1 ou 11 · figures 10 · Joker 75 en main · le plus proche de 0 gagne.
+Réglable dans `js/rules.js` (CONFIG). Trois points d'interprétation à confirmer : pénalités appliquées aux joueurs qui n'ont pas ouvert ; prise de la défausse = ouvrir pendant ce tour ; tierce franche exigée pour ouvrir.

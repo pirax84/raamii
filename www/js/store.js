@@ -2,7 +2,7 @@
 (function (G) {
   var R = (G.Rami = G.Rami || {});
   var KEY = 'raamii-v1';
-  var def = { theme: 'dark', style: 'joker', lang: 'auto', rules: 'maison', full: true, felt: 'auto', faces: 'light', turnTime: 120, sfxVol: 0.8, help: true, chat: false, chatPos: null, coins: 0, owned: [], back: 'nuit', music: true, track: 'calm', volume: 0.5, sfx: true, speed: 1, orient: 'auto', name: '', rank: {}, level: 'medium', rounds: 3 };
+  var def = { theme: 'dark', style: 'joker', lang: 'auto', rules: 'maison', full: true, felt: 'auto', faces: 'light', turnTime: 120, sfxVol: 0.8, homeMusic: true, xp: 0, help: true, chat: false, chatPos: null, coins: 0, owned: [], back: 'nuit', music: true, track: 'calm', volume: 0.5, sfx: true, speed: 1, orient: 'auto', name: '', rank: {}, level: 'medium', rounds: 3 };
   function load() { try { var raw = localStorage.getItem(KEY); return Object.assign({}, def, JSON.parse(raw || '{}')); } catch (e) { return Object.assign({}, def); } }
   var data = load();
   R.Store = {

@@ -3,7 +3,7 @@
   var R = (G.Rami = G.Rami || {});
   var ctx = null, master = null, musicBus = null, sfxBus = null, timer = null, current = null, noiseBuf = null;
   var state = { music: true, sfx: true, volume: 0.5, sfxVol: 0.8 };
-  var TRACKS = { calm: 'Salon calme', jazz: 'Soirée jazz', rain: 'Pluie douce', piano: 'Piano du soir', bossa: 'Bossa légère', night: 'Nuit étoilée' };
+  var TRACKS = { home: 'Accueil', calm: 'Salon calme', jazz: 'Soirée jazz', rain: 'Pluie douce', piano: 'Piano du soir', bossa: 'Bossa légère', night: 'Nuit étoilée' };
 
   function ensure() {
     if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return true; }
@@ -108,6 +108,11 @@
     }
   };
   // 3 nouvelles pistes
+  gens.home = function (beat, t, step) { // ambiance d'accueil : nappe douce + petites notes qui scintillent
+    var H = [[57, 64, 67, 71], [53, 60, 64, 69], [48, 55, 60, 64], [55, 62, 67, 71]], ch = H[Math.floor(beat / 16) % 4];
+    if (beat % 16 === 0) ch.forEach(function (n) { tone(musicBus, f(n), t, step * 16.5, 'sine', 0.045, 2.2); });
+    if (beat % 2 === 0 && Math.random() < 0.5) tone(musicBus, f(ch[Math.floor(Math.random() * 4)] + 24), t, step * 4, 'triangle', 0.028, 0.01);
+  };
   gens.piano = function (beat, t, step) {
     var P = [[57, 60, 64, 69], [53, 57, 60, 65], [55, 59, 62, 67], [52, 55, 59, 64]], ch = P[Math.floor(beat / 8) % 4];
     if (beat % 8 === 0) tone(musicBus, f(ch[0] - 12), t, step * 8, 'triangle', 0.09, 0.01);
@@ -128,7 +133,7 @@
   };
   function stop() { if (timer) { clearInterval(timer); timer = null; } current = null; }
   function start(name) {
-    if (!ensure()) return; stop(); current = name; var beat = 0, step = { jazz: 0.3, rain: 0.5, piano: 0.32, bossa: 0.17, night: 0.42 }[name] || 0.45;
+    if (!ensure()) return; stop(); current = name; var beat = 0, step = { home: 0.36, jazz: 0.3, rain: 0.5, piano: 0.32, bossa: 0.17, night: 0.42 }[name] || 0.45;
     var next = ctx.currentTime + 0.1;
     timer = setInterval(function () { while (next < ctx.currentTime + 0.4) { gens[name](beat, next, step); beat++; next += step; } }, 120);
   }

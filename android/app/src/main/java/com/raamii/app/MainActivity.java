@@ -14,6 +14,8 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        // la musique d'accueil peut démarrer dès l'ouverture, sans attendre un toucher
+        if (getBridge() != null && getBridge().getWebView() != null) getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
         hideSystemBars();
     }
 

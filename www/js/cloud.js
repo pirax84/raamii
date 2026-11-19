@@ -4,7 +4,7 @@
 (function (G) {
   var R = (G.Rami = G.Rami || {});
   var cfg = G.RAAMII_CLOUD || {}, sb = null, user = null, profile = null, listeners = [], pushT = null, applying = false, lastSync = null, busy = false;
-  var SYNC_KEYS = ['coins', 'owned', 'back', 'rank', 'theme', 'style', 'felt', 'faces', 'lang', 'rules', 'music', 'track', 'volume', 'sfx', 'help', 'chat', 'speed', 'orient', 'level', 'rounds', 'name', 'dragSeen'];
+  var SYNC_KEYS = ['coins', 'owned', 'back', 'rank', 'theme', 'style', 'felt', 'faces', 'lang', 'rules', 'music', 'track', 'volume', 'sfx', 'help', 'chat', 'speed', 'orient', 'level', 'rounds', 'name', 'dragSeen', 'xp', 'daily', 'missions', 'feltsOwned', 'homeMusic', 'sfxVol', 'turnTime'];
   try {
     if (cfg.url && cfg.anonKey && G.supabase && G.supabase.createClient) {
       sb = G.supabase.createClient(cfg.url, cfg.anonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'raamii-auth' } });

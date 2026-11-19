@@ -7,8 +7,11 @@
   var R = (G.Rami = G.Rami || {});
   var S = function () { return R.Store; };
   var BACKS = [{ id: 'nuit', price: 0 }, { id: 'aurore', price: 100 }, { id: 'lagon', price: 150 }, { id: 'corail', price: 200 }];
+  var FELTS = [{ id: 'auto', price: 0 }, { id: 'nuit', price: 0 }, { id: 'vert', price: 0 }, { id: 'violet', price: 0 }, { id: 'lagon', price: 0 }, { id: 'ardoise', price: 0 }, { id: 'prune', price: 250 }, { id: 'ocean', price: 300 }];
   R.Shop = {
-    BACKS: BACKS,
+    BACKS: BACKS, FELTS: FELTS,
+    ownsFelt: function (id) { var f = FELTS.filter(function (x) { return x.id === id; })[0]; return !!f && (f.price === 0 || (S().get('feltsOwned') || []).indexOf(id) >= 0); },
+    buyFelt: function (id) { var f = FELTS.filter(function (x) { return x.id === id; })[0]; if (!f) return { ok: false }; if (this.ownsFelt(id)) return { ok: true }; if (this.coins() < f.price) return { ok: false, err: 'notEnough' }; S().set('coins', this.coins() - f.price); var o = (S().get('feltsOwned') || []).slice(); o.push(id); S().set('feltsOwned', o); return { ok: true }; },
     REWARD: { game: 10, win: 50 },
     coins: function () { return S().get('coins') || 0; },
     earn: function (n) { S().set('coins', this.coins() + n); return n; },
@@ -27,6 +30,8 @@
     Ads: { provider: null, reward: 30, ready: function () { return !!this.provider; }, showRewarded: function () { return Promise.reject(new Error('not_configured')); } },
     /* Abonnement VIP : à brancher avec les achats intégrés. */
     VIP: { plans: [{ id: 'vip_month', period: 'P1M' }, { id: 'vip_year', period: 'P1Y' }], active: function () { return false; }, ready: function () { return false; } },
+    /* Pass saison : défis bonus + skins exclusifs, achat intégré (à brancher). */
+    Pass: { price: '4,99 €', ready: function () { return false; } },
     /* Tournois : nécessitent le serveur multijoueur (voir docs/MULTIJOUEUR.md). */
     Tournaments: { needsServer: true, ready: function () { return false; }, list: function () { return Promise.resolve([]); } }
   };

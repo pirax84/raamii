@@ -12,6 +12,7 @@ Jeu de Rami : 108 cartes, jusqu'à 6 joueurs, deux règles au choix (règle de l
 | `android/` | Le projet Android (Capacitor) : plein écran, rotation libre, micro/caméra, icône Raamii |
 | `supabase/schema.sql` | La base de données : profils, sauvegardes, parties, classement, salons |
 | `.github/workflows/android.yml` | Fabrique `Raamii.apk` automatiquement à chaque mise à jour et le publie dans *Releases* |
+| `docs/MONETISATION.md` | Fidélisation (cadeau du jour, défis, niveaux) et plan de revenus |
 | `tests/` | Tests des règles et parties simulées entre 6 IA |
 
 ## Brancher Supabase (une fois)

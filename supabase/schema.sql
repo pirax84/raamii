@@ -101,3 +101,62 @@ begin
   where id = auth.uid();
 end; $$;
 grant execute on function public.record_game(text, int, int, jsonb, int, boolean) to authenticated;
+
+-- =====================================================================
+-- v1.3 — Monétisation et fidélisation (à exécuter aussi, une seule fois)
+-- Les achats et les droits (VIP, pass) ne peuvent être écrits QUE par le serveur
+-- (fonction Supabase qui vérifie le reçu Google Play) : aucun joueur ne peut se les donner.
+-- =====================================================================
+create table if not exists public.purchases (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  product_id text not null,               -- ex. coins_500, vip_month, pass_s1, starter_pack
+  platform text not null default 'android',
+  purchase_token text unique,             -- reçu Google Play, vérifié côté serveur
+  amount_cents integer, currency text default 'EUR',
+  status text not null default 'pending', -- pending, verified, refunded
+  created_at timestamptz not null default now()
+);
+create table if not exists public.entitlements (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  vip_until timestamptz,
+  season_pass text,
+  ad_free boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+create table if not exists public.ad_rewards (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  coins integer not null,
+  created_at timestamptz not null default now()
+);
+alter table public.purchases enable row level security;
+alter table public.entitlements enable row level security;
+alter table public.ad_rewards enable row level security;
+drop policy if exists "je vois mes achats" on public.purchases;
+create policy "je vois mes achats" on public.purchases for select using (auth.uid() = user_id);
+drop policy if exists "je vois mes droits" on public.entitlements;
+create policy "je vois mes droits" on public.entitlements for select using (auth.uid() = user_id);
+drop policy if exists "je vois mes vidéos" on public.ad_rewards;
+create policy "je vois mes vidéos" on public.ad_rewards for select using (auth.uid() = user_id);
+
+-- Vidéo récompensée : au maximum 5 par jour et par joueur (contrôlé par le serveur)
+create or replace function public.claim_ad_reward(p_coins int default 30)
+returns integer language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  if auth.uid() is null then raise exception 'non connecté'; end if;
+  select count(*) into n from public.ad_rewards where user_id = auth.uid() and created_at > now() - interval '1 day';
+  if n >= 5 then return 0; end if;
+  insert into public.ad_rewards(user_id, coins) values (auth.uid(), least(p_coins, 50));
+  return least(p_coins, 50);
+end; $$;
+grant execute on function public.claim_ad_reward(int) to authenticated;
+
+-- Classement de la semaine (pour les tournois hebdomadaires)
+create or replace view public.weekly_leaderboard as
+  select p.pseudo, count(*) filter (where g.won) as wins, count(*) as games, min(g.my_total) as best
+  from public.games g join public.profiles p on p.id = g.user_id
+  where g.created_at > date_trunc('week', now())
+  group by p.pseudo order by wins desc, best asc limit 50;
+grant select on public.weekly_leaderboard to anon, authenticated;

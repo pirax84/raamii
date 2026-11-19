@@ -19,17 +19,25 @@
     play: '<svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>', pause: '<svg viewBox="0 0 24 24"><rect x="7" y="5" width="4" height="14"/><rect x="13" y="5" width="4" height="14"/></svg>',
     robot: '<svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="12" rx="3"/><circle cx="9" cy="13" r="1"/><circle cx="15" cy="13" r="1"/><path d="M12 3v4"/></svg>',
     people: '<svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><circle cx="17" cy="10" r="2.5"/><path d="M3 20a6 6 0 0112 0M15 20a5 5 0 016 0"/></svg>',
+    gift: '<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2"/><path d="M3 13h18M12 9v12M12 9c-2-4-6-4-6-1 0 1 1 1 6 1zM12 9c2-4 6-4 6-1 0 1-1 1-6 1z"/></svg>',
+    spk: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"/></svg>',
+    spkoff: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>',
     sort: '<svg viewBox="0 0 24 24"><path d="M7 4v16M4 7l3-3 3 3M17 20V4M14 17l3 3 3-3"/></svg>',
     bulb: '<svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/></svg>',
     trophy: '<svg viewBox="0 0 24 24"><path d="M6 4h12v4a6 6 0 01-12 0zM9 20h6M12 14v6"/></svg>',
     book: '<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/></svg>',
     gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>'
   };
-  var meldView = null, tmr = { deadline: 0, total: 0, last: 0, pid: -1, warned: false }, vote = null, accDraft = { email: '', pw: '', pseudo: '' }, C2 = R.Cloud, drag = null, dragId = null, lastDragEnd = 0, doFlip = false, helpOpen = false, scoresOpen = false, sortMode = 0, lay = null, relayT = null, installEvt = null, rulesView = null, newId = null, helpCache = { k: '', v: [] }, drawnT = null, chatMsgs = [], chatOpen = false, chatUnread = false;
+  var Pg = R.Progress, unlocked = false, meldView = null, tmr = { deadline: 0, total: 0, last: 0, pid: -1, warned: false }, vote = null, accDraft = { email: '', pw: '', pseudo: '' }, C2 = R.Cloud, drag = null, dragId = null, lastDragEnd = 0, doFlip = false, helpOpen = false, scoresOpen = false, sortMode = 0, lay = null, relayT = null, installEvt = null, rulesView = null, newId = null, helpCache = { k: '', v: [] }, drawnT = null, chatMsgs = [], chatOpen = false, chatUnread = false;
   var game = null, mode = 'solo', view = 0, sel = [], covered = false, aiTimer = null, toastT = null, dealing = false, screen = 'menu', hasHumans = 1;
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function show(name) { screen = name; doc.querySelectorAll('.screen').forEach(function (s) { s.classList.toggle('on', s.id === name); }); }
+  function musicFor(name) {
+    if (!unlocked) return;
+    if (name === 'table') { if (A.current() === 'home') A.stop(); return; }
+    if (S.get('homeMusic') !== false) { if (A.current() !== 'home') { A.config({ music: true }); A.play('home'); } } else if (A.current() === 'home') A.stop();
+  }
+  function show(name) { screen = name; musicFor(name); doc.querySelectorAll('.screen').forEach(function (s) { s.classList.toggle('on', s.id === name); }); }
   function applyTheme() {
     var v = S.get('theme'), th = v === 'auto' ? (G.matchMedia && G.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : v;
     doc.documentElement.dataset.theme = th; doc.documentElement.dataset.style = S.get('style') || 'joker'; doc.documentElement.dataset.back = S.get('back') || 'nuit'; doc.documentElement.dataset.felt = S.get('felt') || 'auto'; doc.documentElement.dataset.faces = S.get('faces') || 'light';
@@ -64,10 +72,12 @@
   function logo() { return '<div class="logo"><span class="lm">' + ICON.ace + '</span>' + t('appName').toUpperCase() + '</div>'; }
   function mbtn(act, c, ic, title, sub) { return '<button class="mbtn" data-act="' + act + '"><span class="ic" style="background:' + c + '">' + ICON[ic] + '</span><span><b>' + title + '</b><small>' + sub + '</small></span></button>'; }
   function renderMenu() {
-    $('#menu').innerHTML = '<div class="menu"><div class="row">' + logo() + '<span class="sp"></span><button class="ib" data-act="themeToggle" aria-label="' + t('theme') + '">' + ICON.gear + '</button></div>' +
+    var li = Pg.levelInfo(), pend = Pg.pending(), hm = S.get('homeMusic') !== false;
+    $('#menu').innerHTML = '<div class="menu"><div class="row">' + logo() + '<span class="sp"></span><button class="ib" data-act="homeMute" aria-label="' + t(hm ? 'soundOn' : 'soundOff') + '" title="' + t(hm ? 'soundOn' : 'soundOff') + '">' + (hm ? ICON.spk : ICON.spkoff) + '</button><button class="ib" data-act="themeToggle" aria-label="' + t('theme') + '">' + ICON.gear + '</button></div>' +
+      '<div class="row lvl"><button class="lvc" data-act="daily"><b>' + t('levelN', { n: li.level }) + '</b><span class="bar"><i style="width:' + Math.round(100 * li.have / li.span) + '%"></i></span><small>' + t('xpTo', { a: li.have, b: li.span }) + '</small></button><span class="coinb"><span class="coin"></span>' + Sh.coins() + '</span></div>' +
       '<div class="hero" aria-hidden="true">' + [['A', 'H', -12], ['K', 'S', 0], ['Q', 'D', 12]].map(function (c, i) { return '<div style="transform:rotate(' + c[2] + 'deg);margin:0 -8px;--cw:62px;z-index:' + (i === 1 ? 2 : 1) + '">' + R.CardView.html({ id: 'm' + i, r: c[0] === 'A' ? 1 : c[0] === 'K' ? 13 : 12, s: c[1] }) + '</div>'; }).join('') + '</div>' +
       mbtn('solo', '#2FCDBE', 'robot', t('solo'), t('soloSub')) + mbtn('friends', '#E5679C', 'people', t('friends'), t('friendsSub')) +
-      mbtn('rank', '#FF8A6B', 'trophy', t('ranking'), '') + mbtn('shop', '#C9BBFF', 'bag', t('shop'), t('shopSub')) + mbtn('rules', '#9B87F5', 'book', t('rules'), t('menuRulesSub')) + mbtn('settings', '#4F7BFF', 'gear', t('settings'), t('theme') + ', ' + t('music') + ', ' + t('language')) + '<p class="vers">' + t('appName') + ' · v' + R.VERSION + '</p></div>';
+      mbtn('daily', '#2FCDBE', 'gift', t('daily') + (pend ? ' <i class="pdot">' + pend + '</i>' : ''), t('dailySub')) + mbtn('rank', '#FF8A6B', 'trophy', t('ranking'), '') + mbtn('shop', '#C9BBFF', 'bag', t('shop'), t('shopSub')) + mbtn('rules', '#9B87F5', 'book', t('rules'), t('menuRulesSub')) + mbtn('settings', '#4F7BFF', 'gear', t('settings'), t('theme') + ', ' + t('music') + ', ' + t('language')) + '<p class="vers">' + t('appName') + ' · v' + R.VERSION + '</p></div>';
   }
 
   // ---------- Préparation d'une partie ----------
@@ -117,14 +127,15 @@
     }
     if (type === 'draw') { A.sfx(game.P[d.pid].human ? 'draw' : 'flick'); var dp = game.P[d.pid]; if (dp.human && d.pid === view && !covered) { newId = d.card.id; showDrawn(d.card); } }
     if (type === 'discard') A.sfx('discard');
-    if (type === 'meld') A.sfx('meld');
+    if (type === 'meld') { A.sfx('meld'); if (game.P[d.pid].human) { Pg.track('meld'); Pg.addXp(5); if (d.meld.cards.some(function (c) { return c.joker; })) Pg.track('joker'); } }
     if (type === 'attach') A.sfx('place');
-    if (type === 'open') { A.sfx('open'); toast(t('opened', { name: game.P[d.pid].name })); }
+    if (type === 'open') { if (game.P[d.pid].human) Pg.track('open');
+      A.sfx('open'); toast(t('opened', { name: game.P[d.pid].name })); }
     if (type === 'rollback') toast(d.reason, true);
     if (type === 'reshuffle') { A.sfx('shuffle'); toast(t('reshuffle')); }
     if (type === 'roundStart') { dealing = true; A.sfx('shuffle'); setTimeout(function () { A.sfx('deal'); }, 1450); setTimeout(function () { dealing = false; }, 900); }
-    if (type === 'roundEnd') { setTimeout(function () { roundEnd(d); }, 900); A.sfx(game.P[d.winner].human ? 'win' : 'flick'); }
-    if (type === 'gameEnd') { S.recordGame(d.ranking); var won = Sh.REWARD.game + (d.ranking[0].human ? Sh.REWARD.win : 0); Sh.earn(won); d.coins = won; gameEnd(d);
+    if (type === 'roundEnd') { if (hasHumans) { Pg.track('rounds'); var wu = game.P[d.winner].human; var up = Pg.addXp(20 + (wu ? 50 : 0)); if (wu && d.sec) Pg.track('sec'); if (up) setTimeout(function () { toast2(t('levelUp', { n: up.level, c: up.coins })); }, 1200); } setTimeout(function () { roundEnd(d); }, 900); A.sfx(game.P[d.winner].human ? 'win' : 'flick'); }
+    if (type === 'gameEnd') { S.recordGame(d.ranking); Pg.track('play'); if (d.ranking[0].human) Pg.track('win'); var won = Sh.REWARD.game + (d.ranking[0].human ? Sh.REWARD.win : 0); Sh.earn(won); d.coins = won; gameEnd(d);
       if (C2 && C2.user()) { var hu = d.ranking.filter(function (r) { return r.human; })[0]; C2.recordGame({ rules: R.CONFIG.id, rounds: game.rounds, players: game.P.length, ranking: d.ranking, total: hu ? hu.total : 0, won: !!d.ranking[0].human }); } }
   }
 
@@ -183,7 +194,7 @@
     others = others.slice().sort(function (a, b) { return ((a.id - view + 6) % 6) - ((b.id - view + 6) % 6); });
     var ANG = { 1: [270], 2: [215, 325], 3: [180, 270, 360], 4: [180, 240, 300, 360], 5: [180, 226, 270, 314, 360] }[others.length] || [];
     function at(deg, rx, ry) { var r = deg * Math.PI / 180; return { x: (50 + rx * Math.cos(r)).toFixed(1), y: (50 + ry * Math.sin(r)).toFixed(1) }; }
-    var seatR = lay === 'land' ? [46, 43] : [42, 44], meldR = lay === 'land' ? [30, 22] : [28, 27];
+    var seatR = lay === 'land' ? [45, 42] : [41, 43], meldR = lay === 'land' ? [30, 22] : [28, 27];
     var seats = others.map(function (p, i) { return seatHTML(p, at(ANG[i], seatR[0], seatR[1]), false); }).join('') + seatHTML(me, at(90, 0, seatR[1] + 2), true);
     var MZ = lay === 'land' ? { 180: [17, 62], 215: [30, 36], 226: [28, 38], 270: [50, 27], 314: [72, 38], 325: [70, 36], 360: [83, 62], mine: [50, 79] }
                             : { 180: [17, 67], 215: [24, 26], 226: [22, 27], 270: [50, 20], 314: [78, 27], 325: [76, 26], 360: [83, 67], mine: [50, 79] };
@@ -407,6 +418,10 @@
       case 'friends': mode = 'friends'; setup.rounds = S.get('rounds'); renderSetup(); show('setup'); break;
       case 'rank': renderRank(); show('rank'); break;
       case 'shop': renderShop(); show('shop'); break;
+      case 'daily': renderDaily(); show('daily'); break;
+      case 'claimDaily': { var g = Pg.claimDaily(); if (g) { A.sfx('win'); toast2(t('dailyGot', { n: g })); } renderDaily(); return; }
+      case 'claimMission': { var r9 = Pg.claimMission(el.dataset.v); if (r9) { A.sfx('open'); toast2(r9.up ? t('levelUp', { n: r9.up.level, c: r9.up.coins }) : '+' + r9.coins); } renderDaily(); return; }
+      case 'homeMute': S.set('homeMusic', S.get('homeMusic') === false); unlocked = true; A.unlock(); musicFor('menu'); renderMenu(); return;
       case 'tableSettings': $('#mpause').classList.add('on'); renderPause(); return;
       case 'pickCombo': { if (!humanTurn() || game.phase !== 'play') return; var cb = combos(game.P[view].hand)[+el.dataset.v]; if (cb) { sel = cb.ids.slice(); A.sfx('select'); } helpOpen = false; break; }
       case 'rules': renderRules(); show('rules'); break;
@@ -451,7 +466,7 @@
     render(); scheduleAI();
   }
   function sw(act, on, label) { return '<button class="sw' + (on ? ' on' : '') + '" data-act="' + act + '" role="switch" aria-checked="' + !!on + '" aria-label="' + label + '"></button>'; }
-  var FELTS = [['auto', 'conic-gradient(#22397A 0 50%,#1F6B45 0)'], ['nuit', '#1B3170'], ['vert', '#1A5E3C'], ['violet', '#2E2478'], ['lagon', '#11697A'], ['ardoise', '#323A4F']];
+  var FELTS = [['auto', 'conic-gradient(#22397A 0 50%,#1F6B45 0)'], ['nuit', '#1B3170'], ['vert', '#1A5E3C'], ['violet', '#2E2478'], ['lagon', '#11697A'], ['ardoise', '#323A4F'], ['prune', '#3A1F5C'], ['ocean', '#0E3A5C']];
   function facePreview(f) {
     var cur = (S.get('faces') || 'light') === f, st = S.get('style') || 'joker';
     var cs = [{ id: 'f1' + f, r: 13, s: 'S' }, { id: 'f2' + f, r: 1, s: 'H' }, { id: 'f3' + f, r: 9, s: 'C' }];
@@ -478,7 +493,8 @@
     var tr = A.TRACKS, cur = A.current(), langs = [['auto', t('langAuto')]].concat(Object.keys(R.LANGS).map(function (k) { return [k, R.LANGS[k]]; }));
     return (inGame ? '<p class="muted" style="margin:0;font-size:13px">' + t('inGameSub') + '</p>' : accountTile()) +
       '<div class="li"><span>' + t('music') + '</span><span class="sp"></span>' + sw('musicSw', S.get('music'), t('music')) + '</div>' +
-      Object.keys(tr).map(function (k) { return '<div class="li"><button class="round" data-act="track" data-v="' + k + '" aria-label="' + t('tr_' + k) + '">' + (cur === k ? ICON.pause : ICON.play) + '</button><b>' + t('tr_' + k) + '</b></div>'; }).join('') +
+      '<div class="li"><div class="lt"><b>' + t('homeMusic') + '</b><p class="tdesc">' + t('homeMusicSub') + '</p></div>' + sw('homeSw', S.get('homeMusic') !== false, t('homeMusic')) + '</div>' +
+      Object.keys(tr).filter(function (k) { return k !== 'home'; }).map(function (k) { return '<div class="li"><button class="round" data-act="track" data-v="' + k + '" aria-label="' + t('tr_' + k) + '">' + (cur === k ? ICON.pause : ICON.play) + '</button><b>' + t('tr_' + k) + '</b></div>'; }).join('') +
       '<div class="li"><span>' + t('volume') + '</span><input type="range" id="vol" min="0" max="100" value="' + Math.round(S.get('volume') * 100) + '" aria-label="' + t('volume') + '"></div>' +
       '<div class="li"><span>' + t('sfx') + '</span><span class="sp"></span>' + sw('sfxSw', S.get('sfx'), t('sfx')) + '</div>' +
       '<div class="li"><span>' + t('sfxVol') + '</span><input type="range" id="sfxvol" min="0" max="100" value="' + Math.round((S.get('sfxVol') != null ? S.get('sfxVol') : 0.8) * 100) + '" aria-label="' + t('sfxVol') + '"></div>' +
@@ -491,7 +507,7 @@
       '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('theme') + '</p>' + chips('theme', [['dark', t('dark')], ['light', t('light')], ['auto', t('auto')]], S.get('theme')) + '</div>' +
       '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('style') + '</p><div class="stps">' + stylePreview('joker', S.get('style')) + stylePreview('classic', S.get('style')) + '</div><p class="tdesc">' + t('styleSub') + '</p></div>' +
       '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('faces') + '</p><div class="stps">' + facePreview('light') + facePreview('dark') + '</div><p class="tdesc">' + t('facesSub') + '</p></div>' +
-      '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('felt') + '</p><div class="row" style="flex-wrap:wrap">' + FELTS.map(function (f) { var cur = (S.get('felt') || 'auto') === f[0]; return '<button class="chip sw2' + (cur ? ' on' : '') + '" data-act="felt" data-v="' + f[0] + '" aria-pressed="' + cur + '"><span class="swc" style="background:' + f[1] + '"></span>' + t(f[0] === 'auto' ? 'feltAuto' : 'f_' + f[0]) + '</button>'; }).join('') + '</div></div>' +
+      '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('felt') + '</p><div class="row" style="flex-wrap:wrap">' + FELTS.filter(function (f) { return Sh.ownsFelt(f[0]); }).map(function (f) { var cur = (S.get('felt') || 'auto') === f[0]; return '<button class="chip sw2' + (cur ? ' on' : '') + '" data-act="felt" data-v="' + f[0] + '" aria-pressed="' + cur + '"><span class="swc" style="background:' + f[1] + '"></span>' + t(f[0] === 'auto' ? 'feltAuto' : 'f_' + f[0]) + '</button>'; }).join('') + '</div></div>' +
       '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('turnTime') + '</p>' + chips('turnTime', [[60, t('tmMin', { n: 1 })], [120, t('tmMin', { n: 2 })], [180, t('tmMin', { n: 3 })], [300, t('tmMin', { n: 5 })], [0, t('tmUnl')]], game && game.turnTime != null ? game.turnTime : S.get('turnTime')) + '<p class="tdesc">' + t('turnTimeSub') + '</p></div>' +
       '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('speed') + '</p>' + chips('speed', [[1.6, t('slow')], [1, t('normal')], [0.5, t('fast')]], S.get('speed')) + '</div>' +
       '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('orientation') + '</p>' + chips('orient', [['auto', t('auto')], ['portrait', t('portrait')], ['landscape', t('landscape')]], S.get('orient')) + '<p class="tdesc">' + t('orientSub') + '</p></div>' +
@@ -529,11 +545,24 @@
         var own = Sh.owns(b.id), on = cur === b.id;
         return '<button class="bko' + (on ? ' on' : '') + '" data-act="' + (own ? 'equipBack' : 'buyBack') + '" data-v="' + b.id + '"><div class="bk-' + b.id + '">' + R.CardView.back() + '</div><b>' + t('b_' + b.id) + '</b><small>' + (on ? t('equipped') : own ? t('equip') : (b.price + ' · ' + t('buy'))) + '</small></button>';
       }).join('') + '</div><p class="tdesc">' + t('earnHow') + '</p></div>' +
-      [['vip', 'vipSub'], ['adReward', 'adSub'], ['coinPacks', 'earnHow'], ['tournaments', 'tournSub']].map(function (x) { return '<div class="li"><div class="lt"><b>' + t(x[0]) + '</b><p class="tdesc">' + (x[0] === 'coinPacks' ? '500 · 1500 · 5000' : t(x[1])) + '</p></div><span class="soon">' + t('soon') + '</span></div>'; }).join('') +
+      '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('felts') + '</p><div class="backs">' + Sh.FELTS.filter(function (f) { return f.price > 0; }).map(function (f) {
+        var own = Sh.ownsFelt(f.id), on = (S.get('felt') || 'auto') === f.id, col = FELTS.filter(function (x) { return x[0] === f.id; })[0][1];
+        return '<button class="bko' + (on ? ' on' : '') + '" data-act="' + (own ? 'equipFelt' : 'buyFelt') + '" data-v="' + f.id + '"><span class="fsw" style="background:' + col + '"></span><b>' + t('f_' + f.id) + '</b><small>' + (on ? t('equipped') : own ? t('equip') : (f.price + ' · ' + t('buy'))) + '</small></button>';
+      }).join('') + '</div></div>' +
+      [['vip', 'vipSub'], ['passT', 'passSub'], ['adReward', 'adSub'], ['coinPacks', 'earnHow'], ['roomsT', 'roomsSub'], ['tournaments', 'tournSub']].map(function (x) { return '<div class="li"><div class="lt"><b>' + t(x[0]) + '</b><p class="tdesc">' + (x[0] === 'coinPacks' ? '500 · 1500 · 5000' : t(x[1])) + '</p></div><span class="soon">' + t('soon') + '</span></div>'; }).join('') +
       '<p class="vers">v' + R.VERSION + '</p></div>';
   }
+  function renderDaily() {
+    var d = Pg.daily(), idx = Pg.dayIndex(), can = Pg.canClaim(), li = Pg.levelInfo();
+    var cal = Pg.DAILY.map(function (c, i) { var st = i < idx || (!can && i === idx) ? 'done' : (i === idx && can ? 'now' : ''); return '<div class="dd ' + st + '"><small>' + t('dayN', { n: i + 1 }) + '</small><span class="coin"></span><b>' + c + '</b></div>'; }).join('');
+    var ms = Pg.missions().map(function (m) { var ok = m.prog >= m.goal; return '<div class="mis' + (m.claimed ? ' done' : '') + '"><div class="lt"><b>' + t('m_' + m.id, { n: m.goal }) + '</b><span class="bar"><i style="width:' + Math.round(100 * m.prog / m.goal) + '%"></i></span><small class="muted">' + m.prog + ' / ' + m.goal + ' · ' + t('rewardT', { c: m.coins, x: m.xp }) + '</small></div>' + (m.claimed ? '<span class="vy">✓</span>' : '<button class="btn pill" data-act="claimMission" data-v="' + m.id + '"' + (ok ? '' : ' disabled') + '>' + t('claim') + '</button>') + '</div>'; }).join('');
+    $('#daily').innerHTML = '<div class="menu"><div class="row"><button class="ib" data-act="menu" aria-label="' + t('back') + '">' + ICON.back + '</button><h2>' + t('daily') + '</h2><span class="sp"></span><span class="coinb"><span class="coin"></span>' + Sh.coins() + '</span></div>' +
+      '<div class="tile"><div class="row"><b>' + t('levelN', { n: li.level }) + '</b><span class="sp"></span><small class="muted">' + t('xpTo', { a: li.have, b: li.span }) + '</small></div><span class="bar big"><i style="width:' + Math.round(100 * li.have / li.span) + '%"></i></span></div>' +
+      '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('streak', { n: d.streak || 0 }) + '</p><div class="cal">' + cal + '</div><button class="btn" data-act="claimDaily" style="width:100%;margin-top:10px"' + (can ? '' : ' disabled') + '>' + (can ? t('claim') + ' · ' + Pg.DAILY[idx] : t('claimed')) + '</button></div>' +
+      '<div class="tile"><p class="muted" style="margin:0 0 8px">' + t('missionsT') + '</p>' + ms + '<p class="tdesc">' + t('dailyReset') + '</p></div></div>';
+  }
   function rerenderAll() {
-    if (screen === 'settings') renderSettings(); else if (screen === 'menu') renderMenu(); else if (screen === 'rules') renderRules(); else if (screen === 'rank') renderRank(); else if (screen === 'shop') renderShop(); else if (screen === 'setup') { readNames(); renderSetup(); }
+    if (screen === 'settings') renderSettings(); else if (screen === 'daily') renderDaily(); else if (screen === 'menu') renderMenu(); else if (screen === 'rules') renderRules(); else if (screen === 'rank') renderRank(); else if (screen === 'shop') renderShop(); else if (screen === 'setup') { readNames(); renderSetup(); }
     if ($('#mpause').classList.contains('on')) renderPause();
     if (game && screen === 'table') render();
     renderChat();
@@ -548,6 +577,7 @@
       case 'lang': S.set('lang', el.dataset.v); applyTheme(); break;
       case 'orient': S.set('orient', el.dataset.v); applyOrientation(); break;
       case 'musicSw': S.set('music', !S.get('music')); audioCfg(); if (S.get('music') && (screen === 'table' || game)) startMusic(); break;
+      case 'homeSw': S.set('homeMusic', S.get('homeMusic') === false); unlocked = true; A.unlock(); musicFor('settings'); break;
       case 'sfxSw': S.set('sfx', !S.get('sfx')); audioCfg(); break;
       case 'helpSw': S.set('help', !S.get('help')); break;
       case 'chatSw': S.set('chat', !S.get('chat')); if (!S.get('chat')) chatOpen = false; break;
@@ -577,6 +607,8 @@
   }
   function shopAct(a, el) {
     if (a === 'buyBack') { var r = Sh.buy(el.dataset.v); if (r.ok) { Sh.equip(el.dataset.v); A.sfx('win'); applyTheme(); renderShop(); toast2(t('bought')); } else { A.sfx('error'); toast2(t('notEnough')); } return true; }
+    if (a === 'buyFelt') { var rf = Sh.buyFelt(el.dataset.v); if (rf.ok) { S.set('felt', el.dataset.v); A.sfx('win'); applyTheme(); renderShop(); toast2(t('bought')); } else { A.sfx('error'); toast2(t('notEnough')); } return true; }
+    if (a === 'equipFelt') { S.set('felt', el.dataset.v); applyTheme(); A.sfx('flick'); renderShop(); return true; }
     if (a === 'equipBack') { Sh.equip(el.dataset.v); applyTheme(); A.sfx('flick'); renderShop(); return true; }
     return false;
   }
@@ -625,6 +657,10 @@
 
   function init() {
     applyTheme(); applyLayout(false); lockOrient(); audioCfg(); renderMenu(); show('menu'); initChatDrag(); initHandDrag(); setInterval(tickTimer, 250);
+    var unlockOnce = function () { if (unlocked) return; unlocked = true; A.unlock(); musicFor(screen); };
+    doc.addEventListener('pointerdown', unlockOnce, true); doc.addEventListener('keydown', unlockOnce, true);
+    if (isNative()) unlockOnce();
+    if (Pg.canClaim()) { renderDaily(); show('daily'); }
     G.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; rerenderAll(); });
     G.addEventListener('appinstalled', function () { installEvt = null; rerenderAll(); });
     if (G.matchMedia) { var mq = G.matchMedia('(orientation: landscape)'); var onMq = function () { applyLayout(true); }; if (mq.addEventListener) mq.addEventListener('change', onMq); else if (mq.addListener) mq.addListener(onMq); }

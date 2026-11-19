@@ -352,3 +352,69 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .droptgt .card,.mrow.droptgt{outline:3px solid var(--turq);outline-offset:3px;border-radius:8px}
 .ac.v2 .status .stx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .pop .hc{display:inline-block;padding:6px 12px;border-radius:12px;border:1.5px solid var(--hl);background:color-mix(in srgb,var(--hl) 18%,transparent);color:var(--tx);font-size:14px;font-weight:600;cursor:pointer}
+/* ===== v1.2.0 : vraie table à 6, jeu posé devant chaque joueur, grandes piles, chrono ===== */
+.stage{display:none}
+:root[data-lay="port"] .tb,:root[data-lay="land"] .tb{grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-columns:minmax(0,1fr);grid-template-areas:"hd" "ce" "ac" "hn"}
+:root[data-lay="land"] .tb{max-width:1280px;margin:0 auto}
+.seats{display:none}
+.tb .ce{position:relative;padding:0;min-height:0}
+.felt2{position:absolute;inset:3% 2%;border-radius:50%;background:var(--felt);box-shadow:var(--rim)}
+:root[data-lay="port"] .felt2{inset:5% 4% 7%}
+.ring{position:absolute;inset:0}
+/* places autour du contour */
+.ring .seat.v2.rs{position:absolute;left:var(--sx);top:var(--sy);transform:translate(-50%,-50%);flex-direction:column;align-items:center;gap:2px;padding:5px 6px 4px;max-width:96px;min-width:62px;z-index:6;cursor:pointer;background:var(--panel)}
+.ring .seat.v2.rs .nm{flex:none;max-width:84px;font-size:11px;text-align:center}
+.ring .seat.v2.rs .st{position:absolute;top:2px;right:2px;flex-direction:column;gap:2px;margin:0}
+.ring .seat.v2.rs .st i{width:15px;height:15px;border-radius:5px}.ring .seat.v2.rs .st i svg{width:10px;height:10px}
+.ring .seat.v2.rs .av{width:34px;height:34px}
+.ring .seat.mine{border-color:var(--acc);min-width:70px}
+.ring .seat.turn{box-shadow:0 0 0 2.5px var(--acc),0 0 18px color-mix(in srgb,var(--acc) 70%,transparent)}
+/* chronomètre : anneau autour de l'avatar + temps restant */
+.av .tmr{position:absolute;inset:-5px;border-radius:14px;background:conic-gradient(var(--turq) calc(var(--p,1)*360deg),rgba(255,255,255,.12) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3.5px),#000 0);mask:radial-gradient(farthest-side,transparent calc(100% - 3.5px),#000 0);pointer-events:none}
+.av .tmr.low{background:conic-gradient(var(--coral) calc(var(--p,1)*360deg),rgba(255,255,255,.12) 0);animation:pulse2 1s infinite}
+@keyframes pulse2{50%{opacity:.45}}
+.tms{font-size:11px;font-weight:800;color:var(--turq);font-variant-numeric:tabular-nums}.tms.low{color:var(--coral)}
+.opc.tmc{border-color:var(--turq)}.opc.bad{border-color:var(--coral);opacity:.9}
+/* jeu posé devant chaque joueur, toujours visible */
+.mz{position:absolute;left:var(--mx);top:var(--my);transform:translate(-50%,-50%);max-width:34%;max-height:30%;overflow:hidden;display:flex;flex-wrap:wrap;gap:3px 5px;justify-content:center;align-content:center;z-index:3;padding:4px;border-radius:12px;background:rgba(5,11,31,.28);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--oc) 70%,transparent);cursor:pointer;--mzc:22px}
+.mz.mine{max-width:70%;max-height:24%;--mzc:28px}
+.mz .mrow{padding:1px}.mz .mrow .card{--cw:var(--mzc);margin-right:calc(var(--mzc)*-.48)}.mz .mrow .card:last-child{margin-right:0}
+:root[data-lay="land"] .mz{max-width:26%;max-height:34%}:root[data-lay="land"] .mz.mine{max-width:44%;max-height:30%}
+@media (min-width:900px) and (min-height:600px){.mz{--mzc:30px}.mz.mine{--mzc:36px}}
+.meldp{left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,92%);max-height:80%;overflow:auto;z-index:25}
+.meldp .mpl{display:flex;flex-wrap:wrap;gap:10px}.meldp .mrow .card{--cw:46px;margin-right:-20px}.meldp .mrow .card:last-child{margin-right:0}
+/* pioche et défausse au centre, plus grandes ; la carte sous la pioche dépasse bien */
+.ctr{position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);z-index:4}
+.ctr .piles{gap:18px;margin:0}
+:root[data-lay="port"] .piles{--pw:68px}:root[data-lay="land"] .piles{--pw:62px}
+@media (max-height:620px){:root[data-lay="land"] .piles{--pw:50px}}
+@media (min-width:900px) and (min-height:600px){:root[data-lay="land"] .piles{--pw:88px}}
+.drawz{width:calc(var(--pw)*1.62 + 6px)!important;height:calc(var(--pw)*1.4 + 14px)!important}
+.drawz .pile.rsv{left:calc(var(--pw)*.6)!important;top:12px!important}
+.drawz .pile.rsv .card{transform:rotate(7deg)!important;box-shadow:0 0 0 2px var(--turq),0 6px 14px rgba(0,0,0,.45)}
+.tb .pile.dsc .card{--cw:calc(var(--pw)*1.18)!important;box-shadow:0 0 0 2.5px var(--acc),0 10px 22px rgba(0,0,0,.5)}
+/* combinaisons valides : couleurs vives et lumineuses */
+.card.cmb{box-shadow:0 0 0 3px var(--hl),0 0 16px 2px var(--hl),var(--cardsh);animation:hlGlow 1.8s ease-in-out infinite}
+.card.cmb::before{height:6%;min-height:4px;width:36%;box-shadow:0 0 8px var(--hl)}
+@keyframes hlGlow{50%{box-shadow:0 0 0 3px var(--hl),0 0 6px 0 var(--hl),var(--cardsh)}}
+.card.sel.cmb{box-shadow:0 0 0 3px var(--tx),0 0 18px 3px var(--hl),0 10px 20px rgba(0,0,0,.5)}
+/* vote */
+.vlist{display:flex;flex-direction:column;gap:8px}.vlist .sr2 span:nth-child(2){flex:1}
+.vy{color:var(--turq);font-weight:700}.vn{color:var(--coral);font-weight:700}
+.vres{margin:0;padding:10px 12px;border-radius:14px;font-weight:700}.vres.ok{background:rgba(47,205,190,.15);color:var(--turq)}.vres.ko{background:rgba(255,138,107,.15);color:var(--coral)}
+.btn.pill{min-height:36px;padding:0 14px;font-size:14px}
+/* place libérée : la main reste grande */
+:root[data-lay="land"] .hn,:root[data-lay="land"] .hn.c8{--fw:min(100px,calc((100vw - 80px)/9.6),calc((100vh - 300px)/1.3))}
+@media (max-height:620px){:root[data-lay="land"] .hn,:root[data-lay="land"] .hn.c8{padding-top:18px;--fw:min(84px,calc((100vw - 80px)/9.6),calc((100vh - 230px)/1.32))}}
+:root[data-lay="port"] .hn{--hw:min(100px,calc((100vw - 20px)/(6*.62 + 1)),calc((100vh - 470px)/2.45))}
+@media (max-height:620px){
+  :root[data-lay="land"] .ring .seat.mine{display:none}
+  :root[data-lay="land"] .mz.mine{left:78%!important;top:82%!important;max-width:30%;max-height:30%}
+  :root[data-lay="land"] .ring .seat.v2.rs{padding:3px 5px;min-width:54px}:root[data-lay="land"] .ring .seat.v2.rs .av{width:28px;height:28px;font-size:12px}
+  :root[data-lay="land"] .hn,:root[data-lay="land"] .hn.c8{--fw:min(74px,calc((100vw - 80px)/9.6),calc((100vh - 260px)/1.25))}
+}
+.mz{max-width:30%;max-height:19%}.mz.mine{max-width:46%;max-height:17%}
+:root[data-lay="land"] .mz{max-width:24%;max-height:26%}:root[data-lay="land"] .mz.mine{max-width:34%;max-height:22%}
+:root[data-lay="port"] .piles{--pw:62px}:root[data-lay="port"] .ctr{transform:translate(-50%,-56%)}
+@media (max-height:620px){:root[data-lay="land"] .mz{--mzc:16px;max-width:22%;max-height:22%;padding:2px}:root[data-lay="land"] .mz.mine{--mzc:18px}}
+:root[data-lay="land"] .mz{max-height:22%}
